@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenTask</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body class="app-body">
+
+  <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <svg width="26" height="26" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="10" fill="#7c3aed"/>
+        <path d="M10 18l6 6 10-12" stroke="white" stroke-width="2.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="topbar-brand">OpenTask</span>
+    </div>
+    <div class="topbar-right">
+      <span id="topbar-user" class="topbar-username"></span>
+      <button id="btn-admin" class="btn btn-ghost btn-sm hidden">Admin Panel</button>
+      <button id="btn-server" class="btn btn-ghost btn-sm" title="Change server">⚙</button>
+      <button id="btn-logout" class="btn btn-danger btn-sm">Logout</button>
+    </div>
+  </header>
+
+  <!-- ── Main layout ─────────────────────────────────────────────────────── -->
+  <div class="layout">
+
+    <!-- Sidebar: lists -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">MY LISTS</span>
+        <button id="btn-new-list" class="btn btn-icon" title="New list">＋</button>
+      </div>
+      <ul id="lists-ul" class="lists-ul"></ul>
+    </aside>
+
+    <!-- Main panel: tasks -->
+    <main class="main-panel">
+      <div class="panel-header">
+        <h2 id="tasks-heading" class="tasks-heading">← Select a list</h2>
+        <div id="task-actions" class="task-actions hidden">
+          <button id="btn-new-task"    class="btn btn-primary btn-sm">+ New Task</button>
+          <button id="btn-edit-list"   class="btn btn-ghost  btn-sm">Edit List</button>
+          <button id="btn-delete-list" class="btn btn-danger btn-sm">Delete List</button>
+        </div>
+      </div>
+
+      <ul id="tasks-ul" class="tasks-ul"></ul>
+
+      <p id="tasks-empty" class="tasks-empty hidden">No tasks yet. Create one!</p>
+    </main>
+  </div>
+
+  <!-- ── Modals ──────────────────────────────────────────────────────────── -->
+
+  <!-- Generic text form modal -->
+  <div id="modal-form" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3 id="modal-title" class="modal-heading"></h3>
+      <div id="modal-fields"></div>
+      <p id="modal-error" class="error-msg hidden"></p>
+      <div class="modal-footer">
+        <button id="modal-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="modal-save"   class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin panel modal -->
+  <div id="modal-admin" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-wide">
+      <div class="modal-head-row">
+        <h3 class="modal-heading">Admin Panel — Users</h3>
+        <button id="admin-close" class="btn-close" aria-label="Close">✕</button>
+      </div>
+      <div class="admin-toolbar">
+        <button id="btn-new-user"    class="btn btn-primary btn-sm">+ New User</button>
+        <button id="btn-edit-user"   class="btn btn-ghost   btn-sm">Edit</button>
+        <button id="btn-delete-user" class="btn btn-danger  btn-sm">Delete</button>
+      </div>
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Username</th><th>Role</th><th>Created</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+      <p id="admin-error" class="error-msg hidden"></p>
+    </div>
+  </div>
+
+  <!-- User form modal (create / edit user) -->
+  <div id="modal-user-form" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3 id="user-form-title" class="modal-heading"></h3>
+      <div class="field">
+        <label for="uf-username">Username *</label>
+        <input id="uf-username" type="text" />
+      </div>
+      <div class="field">
+        <label for="uf-password" id="uf-pwd-label">Password *</label>
+        <input id="uf-password" type="password" />
+      </div>
+      <div class="field field-check">
+        <input id="uf-is-admin" type="checkbox" />
+        <label for="uf-is-admin">Admin privileges</label>
+      </div>
+      <p id="user-form-error" class="error-msg hidden"></p>
+      <div class="modal-footer">
+        <button id="user-form-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="user-form-save"   class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

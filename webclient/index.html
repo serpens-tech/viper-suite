@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenTask — Sign In</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body class="login-body">
+
+  <!-- ── Server setup screen ─────────────────────────────────────────────── -->
+  <div id="setup-card" class="login-card hidden">
+    <div class="login-logo">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="10" fill="#7c3aed"/>
+        <path d="M10 18l6 6 10-12" stroke="white" stroke-width="2.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 class="login-title">OpenTask</h1>
+    <p class="login-sub">Enter your server address</p>
+    <div class="field">
+      <label for="server-url">Server URL</label>
+      <input id="server-url" type="url" placeholder="https://opentask.example.com" />
+    </div>
+    <p id="setup-error" class="error-msg hidden"></p>
+    <button id="setup-btn" class="btn btn-primary btn-full">Connect</button>
+  </div>
+
+  <!-- ── Login screen ────────────────────────────────────────────────────── -->
+  <div id="login-card" class="login-card hidden">
+    <div class="login-logo">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="10" fill="#7c3aed"/>
+        <path d="M10 18l6 6 10-12" stroke="white" stroke-width="2.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 class="login-title">OpenTask</h1>
+    <p id="login-server-label" class="login-sub" style="font-size:.78rem;color:#9ca3af"></p>
+    <p class="login-sub">Sign in to your account</p>
+
+    <form id="login-form" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" type="text" autocomplete="username"
+               placeholder="admin" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password"
+               placeholder="••••••" required />
+      </div>
+
+      <p id="login-error" class="error-msg hidden"></p>
+
+      <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+        Sign In
+      </button>
+    </form>
+    <button id="change-server-btn" class="btn btn-ghost btn-full" style="margin-top:8px;font-size:.8rem">
+      ⚙ Change server
+    </button>
+  </div>
+
+  <script>
+    const serverUrl = () => (localStorage.getItem('ot_server') || '').replace(/\/$/, '');
+
+    function showSetup(prefill) {
+      document.getElementById('login-card').classList.add('hidden');
+      const card = document.getElementById('setup-card');
+      card.classList.remove('hidden');
+      if (prefill) document.getElementById('server-url').value = prefill;
+      document.getElementById('server-url').focus();
+    }
+
+    function showLogin() {
+      document.getElementById('setup-card').classList.add('hidden');
+      const card = document.getElementById('login-card');
+      card.classList.remove('hidden');
+      document.getElementById('login-server-label').textContent = serverUrl();
+      document.getElementById('username').focus();
+    }
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    if (localStorage.getItem('ot_token')) {
+      window.location.href = 'app.html';
+    } else if (!serverUrl()) {
+      showSetup();
+    } else {
+      showLogin();
+    }
+
+    // ── Setup form ────────────────────────────────────────────────────────────
+    document.getElementById('setup-btn').addEventListener('click', async () => {
+      const errEl = document.getElementById('setup-error');
+      const btn   = document.getElementById('setup-btn');
+      errEl.classList.add('hidden');
+
+      let url = document.getElementById('server-url').value.trim().replace(/\/$/, '');
+      if (!url) { errEl.textContent = 'Please enter a server URL.'; errEl.classList.remove('hidden'); return; }
+      if (!/^https?:\/\//i.test(url)) url = 'http://' + url;
+
+      btn.disabled = true;
+      btn.textContent = 'Connecting…';
+      try {
+        const res = await fetch(`${url}/`, { signal: AbortSignal.timeout(6000) });
+        if (!res.ok) throw new Error(`Server responded with HTTP ${res.status}`);
+        localStorage.setItem('ot_server', url);
+        showLogin();
+      } catch (err) {
+        errEl.textContent = err.message.includes('fetch') ? 'Cannot reach server.' : err.message;
+        errEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Connect';
+      }
+    });
+    document.getElementById('server-url').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('setup-btn').click();
+    });
+
+    // ── Change server ─────────────────────────────────────────────────────────
+    document.getElementById('change-server-btn').addEventListener('click', () => {
+      showSetup(serverUrl());
+    });
+
+    // ── Login form ────────────────────────────────────────────────────────────
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('login-error');
+      const btn   = document.getElementById('login-btn');
+      errEl.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const body = new URLSearchParams({ username, password });
+        const res  = await fetch(`${serverUrl()}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail || `HTTP ${res.status}`);
+        }
+        const { access_token } = await res.json();
+        localStorage.setItem('ot_token', access_token);
+        window.location.href = 'app.html';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>
