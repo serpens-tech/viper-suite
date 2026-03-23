@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenWeb — Free, Self-Hosted Productivity Suite</title>
+  <meta name="description" content="OpenWeb is a free, open-source, self-hosted productivity suite. Task management and budget tracking on your own server — no cloud, no subscriptions, no tracking." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f8fafc;
+      --bg2:       #f1f5f9;
+      --card:      #ffffff;
+      --border:    #e2e8f0;
+      --text:      #0f172a;
+      --sub:       #64748b;
+      --purple:    #7c3aed;
+      --purple-l:  #ede9fe;
+      --green:     #16a34a;
+      --green-l:   #dcfce7;
+      --shadow:    0 2px 16px rgba(0,0,0,.07);
+      --shadow-h:  0 8px 32px rgba(0,0,0,.12);
+      --radius:    14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:       #0f172a;
+        --bg2:      #0d1117;
+        --card:     #1e293b;
+        --border:   #334155;
+        --text:     #f1f5f9;
+        --sub:      #94a3b8;
+        --purple-l: #2e1065;
+        --green-l:  #052e16;
+        --shadow:   0 2px 16px rgba(0,0,0,.4);
+        --shadow-h: 0 8px 32px rgba(0,0,0,.6);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--purple); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Nav ─────────────────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .85rem 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--text);
+      letter-spacing: -.02em;
+    }
+    .nav-logo .logo-open  { color: var(--purple); }
+    .nav-logo .logo-web   { color: var(--text); }
+    .nav-logo img { width: 28px; height: 28px; border-radius: 7px; }
+    .nav-links { display: flex; gap: 1.4rem; align-items: center; }
+    .nav-links a { color: var(--sub); font-size: .9rem; font-weight: 500; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .btn-gh {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .4rem .9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text) !important;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      transition: box-shadow .15s;
+    }
+    .btn-gh:hover { box-shadow: var(--shadow-h); text-decoration: none !important; }
+
+    /* ── Hero ────────────────────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: 6rem 1.5rem 4rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .hero-badges {
+      display: flex;
+      gap: .5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .25rem .75rem;
+      border-radius: 99px;
+      font-size: .78rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--sub);
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -.03em;
+      line-height: 1.15;
+      margin-bottom: 1.1rem;
+    }
+    .hero h1 span.purple { color: var(--purple); }
+    .hero h1 span.green  { color: var(--green);  }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--sub);
+      max-width: 520px;
+      margin: 0 auto 2rem;
+    }
+    .hero-cta {
+      display: flex;
+      gap: .75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      padding: .7rem 1.6rem;
+      background: var(--purple);
+      color: #fff !important;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: .95rem;
+      box-shadow: 0 4px 14px rgba(124,58,237,.35);
+      transition: opacity .15s, transform .15s;
+    }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); text-decoration: none !important; }
+    .btn-secondary {
+      padding: .7rem 1.6rem;
+      background: var(--card);
+      color: var(--text) !important;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: .95rem;
+      box-shadow: var(--shadow);
+      transition: box-shadow .15s, transform .15s;
+    }
+    .btn-secondary:hover { box-shadow: var(--shadow-h); transform: translateY(-1px); text-decoration: none !important; }
+
+    /* ── Code block ──────────────────────────────────────────────────── */
+    .code-block {
+      max-width: 480px;
+      margin: 2.5rem auto 0;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      text-align: left;
+      box-shadow: var(--shadow);
+    }
+    .code-block-header {
+      padding: .55rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: .75rem;
+      color: var(--sub);
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .code-block pre {
+      padding: 1rem 1.2rem;
+      font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+      font-size: .82rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      color: var(--text);
+    }
+    .code-block pre .cmd  { color: var(--purple); font-weight: 600; }
+    .code-block pre .cmnt { color: var(--sub); }
+
+    /* ── Apps section ────────────────────────────────────────────────── */
+    section { padding: 5rem 1.5rem; }
+    .section-inner { max-width: 960px; margin: 0 auto; }
+    .section-label {
+      text-align: center;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--sub);
+      margin-bottom: .75rem;
+    }
+    h2 {
+      text-align: center;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      margin-bottom: 1rem;
+    }
+    .section-sub {
+      text-align: center;
+      color: var(--sub);
+      font-size: .95rem;
+      max-width: 520px;
+      margin: 0 auto 3rem;
+    }
+
+    .app-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .app-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+    }
+    .app-card-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+    .app-card-header img { width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0; }
+    .app-card-header h3 { font-size: 1.1rem; font-weight: 700; }
+    .app-card-header p  { font-size: .82rem; color: var(--sub); margin-top: .1rem; }
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: .55rem; }
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: .6rem;
+      font-size: .88rem;
+      color: var(--sub);
+    }
+    .feature-list li::before {
+      content: "✓";
+      font-weight: 700;
+      font-size: .8rem;
+      margin-top: .1rem;
+      flex-shrink: 0;
+    }
+    .app-card.purple .feature-list li::before { color: var(--purple); }
+    .app-card.green  .feature-list li::before { color: var(--green);  }
+
+    /* ── Clients ─────────────────────────────────────────────────────── */
+    .bg-alt { background: var(--bg2); }
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .client-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.25rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .client-icon { font-size: 2rem; margin-bottom: .6rem; }
+    .client-card h4 { font-size: .95rem; font-weight: 700; margin-bottom: .3rem; }
+    .client-card p  { font-size: .8rem; color: var(--sub); }
+
+    /* ── Quick start ─────────────────────────────────────────────────── */
+    .qs-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .qs-step {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.25rem;
+      box-shadow: var(--shadow);
+    }
+    .qs-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--purple);
+      color: #fff;
+      font-size: .8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: .1rem;
+    }
+    .qs-step h4 { font-size: .9rem; font-weight: 700; margin-bottom: .2rem; }
+    .qs-step p  { font-size: .83rem; color: var(--sub); }
+    .qs-step code {
+      font-family: monospace;
+      background: var(--bg2);
+      padding: .15rem .4rem;
+      border-radius: 5px;
+      font-size: .8rem;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-size: .83rem;
+      color: var(--sub);
+    }
+    footer a { color: var(--sub); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">
+    <img src="data:image/png;base64,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" alt="OpenWeb" />
+    <span class="logo-open">Open</span><span class="logo-web">Web</span>
+  </div>
+  <div class="nav-links">
+    <a href="#apps">Apps</a>
+    <a href="#clients">Clients</a>
+    <a href="#quickstart">Quick Start</a>
+    <a href="https://github.com/your-username/openweb" class="btn-gh">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      GitHub
+    </a>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────────── -->
+<section style="padding: 0;">
+  <div class="hero">
+    <div class="hero-badges">
+      <span class="badge">🐳 Docker</span>
+      <span class="badge">🔓 MIT License</span>
+      <span class="badge">🏠 Self-Hosted</span>
+      <span class="badge">☁️ No Cloud</span>
+      <span class="badge">⚡ FastAPI</span>
+    </div>
+    <h1>Your data.<br>Your server.<br><span class="purple">Your rules.</span></h1>
+    <p><strong>OpenWeb</strong> is a free, open-source, self-hosted productivity suite — <span class="purple">task management</span> and <span class="green">budget tracking</span> running entirely on your own infrastructure. No subscriptions, no tracking, no cloud lock-in.</p>
+    <div class="hero-cta">
+      <a href="https://github.com/your-username/openweb" class="btn-primary">View on GitHub</a>
+      <a href="#quickstart" class="btn-secondary">Quick Start</a>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-header">Get started in 3 commands</div>
+      <pre><span class="cmnt"># clone the repository</span>
+<span class="cmd">git clone</span> https://github.com/your-username/openweb.git
+<span class="cmd">cd</span> openweb
+
+<span class="cmnt"># start everything</span>
+<span class="cmd">docker compose up -d</span>
+
+<span class="cmnt"># open in browser → http://localhost:8000</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── Apps ─────────────────────────────────────────────────────────── -->
+<section id="apps">
+  <div class="section-inner">
+    <div class="section-label">Two apps, one server</div>
+    <h2>Everything you need to stay organised</h2>
+    <p class="section-sub">OpenWeb ships with two apps that share a single self-hosted backend and database, but work completely independently.</p>
+
+    <div class="app-cards">
+      <div class="app-card purple">
+        <div class="app-card-header">
+          <img src="data:image/png;base64,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" alt="OpenTask" />
+          <div>
+            <h3>OpenTask</h3>
+            <p>Task & to-do management</p>
+          </div>
+        </div>
+        <ul class="feature-list">
+          <li>Multiple task lists with priorities and due dates</li>
+          <li>User accounts with JWT authentication</li>
+          <li>Admin panel for managing users</li>
+          <li>Finance flags — mark tasks as income or expense</li>
+          <li>Completing a finance task auto-creates a budget entry</li>
+          <li>Dark mode support</li>
+        </ul>
+      </div>
+
+      <div class="app-card green">
+        <div class="app-card-header">
+          <img src="data:image/png;base64,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" alt="OpenBudget" />
+          <div>
+            <h3>OpenBudget</h3>
+            <p>Income & expense tracking</p>
+          </div>
+        </div>
+        <ul class="feature-list">
+          <li>Track income and expenses with running balance</li>
+          <li>Automatic entries from completed OpenTask finance tasks</li>
+          <li>Date-based transaction history</li>
+          <li>Clean, minimal interface</li>
+          <li>Dark mode support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Clients ───────────────────────────────────────────────────────── -->
+<section class="bg-alt" id="clients">
+  <div class="section-inner">
+    <div class="section-label">Available on</div>
+    <h2>Web, Desktop & Android</h2>
+    <p class="section-sub">All clients connect to your own server. Build from source — the full code is in the repository.</p>
+
+    <div class="client-grid">
+      <div class="client-card">
+        <div class="client-icon">🌐</div>
+        <h4>Web</h4>
+        <p>Works in any modern browser. No install needed.</p>
+      </div>
+      <div class="client-card">
+        <div class="client-icon">🐧</div>
+        <h4>Linux</h4>
+        <p>Native <code>.deb</code> installer for Debian/Ubuntu.</p>
+      </div>
+      <div class="client-card">
+        <div class="client-icon">🪟</div>
+        <h4>Windows</h4>
+        <p>PyInstaller <code>.exe</code> with optional Inno Setup installer.</p>
+      </div>
+      <div class="client-card">
+        <div class="client-icon">🤖</div>
+        <h4>Android</h4>
+        <p>Capacitor-based APK. Build with Android Studio.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Quick Start ───────────────────────────────────────────────────── -->
+<section id="quickstart">
+  <div class="section-inner">
+    <div class="section-label">Setup</div>
+    <h2>Up and running in minutes</h2>
+    <p class="section-sub">All you need is Docker and Git. No databases to configure, no cloud accounts, no environment files to edit.</p>
+
+    <div class="qs-steps">
+      <div class="qs-step">
+        <div class="qs-num">1</div>
+        <div>
+          <h4>Clone the repository</h4>
+          <p><code>git clone https://github.com/your-username/openweb.git && cd openweb</code></p>
+        </div>
+      </div>
+      <div class="qs-step">
+        <div class="qs-num">2</div>
+        <div>
+          <h4>Start the application</h4>
+          <p><code>docker compose up -d</code> — starts the FastAPI backend and PostgreSQL database.</p>
+        </div>
+      </div>
+      <div class="qs-step">
+        <div class="qs-num">3</div>
+        <div>
+          <h4>Open in your browser</h4>
+          <p>Visit <code>http://localhost:8000</code> and pick an app. Default login: <code>admin</code> / <code>admin123</code>.</p>
+        </div>
+      </div>
+      <div class="qs-step">
+        <div class="qs-num">4</div>
+        <div>
+          <h4>Change the default password</h4>
+          <p>Go to the Admin panel and update your credentials immediately.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ───────────────────────────────────────────────────────── -->
+<footer>
+  <p>
+    OpenWeb is free and open-source software released under the <a href="https://github.com/your-username/openweb/blob/main/LICENSE">MIT License</a>.
+    &nbsp;·&nbsp;
+    <a href="https://github.com/your-username/openweb">GitHub</a>
+    &nbsp;·&nbsp;
+    No telemetry &nbsp;·&nbsp; No tracking &nbsp;·&nbsp; Your data stays yours
+  </p>
+</footer>
+
+</body>
+</html>

@@ -3,6 +3,14 @@
 // ── Config ────────────────────────────────────────────────────────────────────
 const API = (localStorage.getItem('ob_server') || window.location.origin).replace(/\/$/, '');
 
+// Capacitor (Android) serves files from https://localhost — detect it so that
+// internal redirects use relative paths instead of /budget/…
+const _CAP       = typeof window.Capacitor !== 'undefined' ||
+                   window.location.origin === 'https://localhost' ||
+                   window.location.origin === 'capacitor://localhost';
+const PATH_INDEX  = _CAP ? 'index.html' : '/budget/';
+const PATH_APP    = _CAP ? 'app.html'   : '/budget/app.html';
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let token          = localStorage.getItem('ob_token') || null;
 let currentUser    = null;
@@ -12,7 +20,7 @@ let summary        = null;
 let selectedUserId = null;
 
 // ── Auth guard ─────────────────────────────────────────────────────────────────
-if (!token) { window.location.href = '/budget/'; }
+if (!token) { window.location.href = PATH_INDEX; }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function escHtml(str) {
@@ -59,7 +67,7 @@ async function apiFetch(method, path, body = null) {
 
   if (res.status === 401) {
     localStorage.removeItem('ob_token');
-    window.location.href = '/budget/';
+    window.location.href = PATH_INDEX;
     return;
   }
 
@@ -521,7 +529,7 @@ function openUserForm(existing) {
 // ── Logout / Change server ────────────────────────────────────────────────────
 document.getElementById('btn-logout').addEventListener('click', () => {
   localStorage.removeItem('ob_token');
-  window.location.href = '/budget/';
+  window.location.href = PATH_INDEX;
 });
 document.getElementById('btn-server').addEventListener('click', () => {
   const url = prompt('Server URL:', localStorage.getItem('ob_server') || '');

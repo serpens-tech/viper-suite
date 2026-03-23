@@ -3,6 +3,14 @@
 // ── Config ────────────────────────────────────────────────────────────────────
 const API = (localStorage.getItem('ot_server') || 'http://localhost:8000').replace(/\/$/, '');
 
+// Capacitor (Android) serves files from https://localhost — detect it so that
+// internal redirects use relative paths instead of /tasks/…
+const _CAP      = typeof window.Capacitor !== 'undefined' ||
+                  window.location.origin === 'https://localhost' ||
+                  window.location.origin === 'capacitor://localhost';
+const PATH_INDEX = _CAP ? 'index.html' : '/tasks/';
+const PATH_APP   = _CAP ? 'app.html'   : '/tasks/app.html';
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let token       = localStorage.getItem('ot_token') || null;
 let currentUser = null;
@@ -11,7 +19,7 @@ let selectedList = null;
 let selectedUserId = null;   // admin panel
 
 // ── Auth guard ─────────────────────────────────────────────────────────────────
-if (!token) { window.location.href = '/tasks/'; }
+if (!token) { window.location.href = PATH_INDEX; }
 
 // ── API helpers ───────────────────────────────────────────────────────────────
 
@@ -33,7 +41,7 @@ async function apiFetch(method, path, body = null) {
 
   if (res.status === 401) {
     localStorage.removeItem('ot_token');
-    window.location.href = '/tasks/';
+    window.location.href = PATH_INDEX;
     return;
   }
 
@@ -558,18 +566,18 @@ function openUserForm(existing) {
 // ── Logout ─────────────────────────────────────────────────────────────────────
 document.getElementById('btn-logout').addEventListener('click', () => {
   localStorage.removeItem('ot_token');
-  window.location.href = '/tasks/';
+  window.location.href = PATH_INDEX;
 });
 document.getElementById('btn-logout-sidebar').addEventListener('click', () => {
   localStorage.removeItem('ot_token');
-  window.location.href = '/tasks/';
+  window.location.href = PATH_INDEX;
 });
 
 // ── Change server ──────────────────────────────────────────────────────────────
 function changeServer() {
   localStorage.removeItem('ot_token');
   localStorage.removeItem('ot_server');
-  window.location.href = '/tasks/';
+  window.location.href = PATH_INDEX;
 }
 document.getElementById('btn-server').addEventListener('click', changeServer);
 document.getElementById('btn-server-sidebar').addEventListener('click', changeServer);

@@ -16,11 +16,7 @@
   <!-- ── Server setup screen ─────────────────────────────────────────────── -->
   <div id="setup-card" class="login-card hidden">
     <div class="login-logo">
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <rect width="36" height="36" rx="10" fill="#7c3aed"/>
-        <path d="M10 18l6 6 10-12" stroke="white" stroke-width="2.8"
-              stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <img src="favicon.svg" width="64" height="64" style="border-radius:14px" alt="OpenTask" />
     </div>
     <h1 class="login-title">OpenTask</h1>
     <p class="login-sub">Enter your server address</p>
@@ -35,11 +31,7 @@
   <!-- ── Login screen ────────────────────────────────────────────────────── -->
   <div id="login-card" class="login-card hidden">
     <div class="login-logo">
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-        <rect width="36" height="36" rx="10" fill="#7c3aed"/>
-        <path d="M10 18l6 6 10-12" stroke="white" stroke-width="2.8"
-              stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <img src="favicon.svg" width="64" height="64" style="border-radius:14px" alt="OpenTask" />
     </div>
     <h1 class="login-title">OpenTask</h1>
     <p id="login-server-label" class="login-sub" style="font-size:.78rem;color:#9ca3af"></p>
@@ -69,7 +61,11 @@
   </div>
 
   <script>
-    const serverUrl = () => (localStorage.getItem('ot_server') || '').replace(/\/$/, '');
+    const _CAP      = typeof window.Capacitor !== 'undefined' ||
+                      window.location.origin === 'https://localhost' ||
+                      window.location.origin === 'capacitor://localhost';
+    const PATH_APP  = _CAP ? 'app.html' : '/tasks/app.html';
+    const serverUrl = () => (localStorage.getItem('ot_server') || '').replace(/\/$/, '');    
 
     function showSetup(prefill) {
       document.getElementById('login-card').classList.add('hidden');
@@ -89,7 +85,7 @@
 
     // ── Boot ──────────────────────────────────────────────────────────────────
     if (localStorage.getItem('ot_token')) {
-      window.location.href = '/tasks/app.html';
+      window.location.href = PATH_APP;
     } else if (!serverUrl()) {
       showSetup();
     } else {
@@ -171,7 +167,7 @@
         }
         const { access_token } = await res.json();
         localStorage.setItem('ot_token', access_token);
-        window.location.href = '/tasks/app.html';
+        window.location.href = PATH_APP;
       } catch (err) {
         errEl.textContent = err.message;
         errEl.classList.remove('hidden');
