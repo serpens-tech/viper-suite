@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>OpenBudget</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <script>(function(){var s=localStorage.getItem('ob_theme'),d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(s===null&&d))document.documentElement.setAttribute('data-theme','dark');else if(s==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
+</head>
+<body class="app-body">
+
+  <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="10" fill="#16a34a"/>
+        <text x="18" y="25" font-size="20" text-anchor="middle" fill="white" font-family="sans-serif">₿</text>
+      </svg>
+      <span class="topbar-brand">OpenBudget</span>
+    </div>
+    <div class="topbar-right">
+      <span id="topbar-user" class="topbar-username"></span>
+      <button id="btn-theme" class="btn-theme" title="Toggle dark mode">🌙</button>
+      <button id="btn-admin" class="btn btn-ghost btn-sm hidden">&#9733; Admin</button>
+      <button id="btn-server" class="btn btn-ghost btn-sm" title="Change server">⚙</button>
+      <button id="btn-logout" class="btn btn-danger btn-sm">Logout</button>
+    </div>
+  </header>
+
+  <!-- ── Page content ────────────────────────────────────────────────────── -->
+  <main class="content">
+
+    <!-- Summary cards -->
+    <div class="summary-row">
+      <div class="summary-card balance">
+        <div class="s-label">Current Balance</div>
+        <div id="card-balance" class="s-value">0.00</div>
+      </div>
+      <div class="summary-card income">
+        <div class="s-label">Total Income</div>
+        <div id="card-income" class="s-value income-val">0.00</div>
+      </div>
+      <div class="summary-card expense">
+        <div class="s-label">Total Expenses</div>
+        <div id="card-expense" class="s-value expense-val">0.00</div>
+      </div>
+    </div>
+
+    <!-- Action bar -->
+    <div class="action-bar">
+      <div class="filter-group">
+        <label for="month-filter">Month:</label>
+        <select id="month-filter">
+          <option value="">All months</option>
+        </select>
+      </div>
+      <div class="action-btns">
+        <button id="btn-add-income"  class="btn btn-income  btn-sm">+ Income</button>
+        <button id="btn-add-expense" class="btn btn-expense btn-sm">+ Expense</button>
+      </div>
+    </div>
+
+    <!-- Two-column: Incomes | Expenses -->
+    <div class="finance-grid">
+      <section class="finance-section">
+        <h3 class="section-heading income-heading">Income</h3>
+        <ul id="incomes-ul" class="entries-ul"></ul>
+        <p id="incomes-empty" class="entries-empty hidden">No income for this period.</p>
+      </section>
+
+      <section class="finance-section">
+        <h3 class="section-heading expense-heading">Expenses</h3>
+        <ul id="expenses-ul" class="entries-ul"></ul>
+        <p id="expenses-empty" class="entries-empty hidden">No expenses for this period.</p>
+      </section>
+    </div>
+
+    <!-- Monthly overview -->
+    <section class="monthly-section">
+      <div class="monthly-heading">Monthly Overview</div>
+      <div class="table-wrap">
+        <table class="monthly-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Income</th>
+              <th>Expenses</th>
+              <th>Net</th>
+              <th>Cumulative Balance</th>
+            </tr>
+          </thead>
+          <tbody id="monthly-tbody"></tbody>
+        </table>
+      </div>
+      <p id="monthly-empty" class="entries-empty hidden">No data to display.</p>
+    </section>
+
+  </main>
+
+  <!-- ── Admin panel modal ──────────────────────────────────────────────── -->
+  <div id="modal-admin" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-wide">
+      <div class="modal-head-row">
+        <h3 class="modal-heading">Admin Panel — Users</h3>
+        <button id="admin-close" class="btn-close" aria-label="Close">✕</button>
+      </div>
+      <div class="admin-toolbar">
+        <button id="btn-new-user"    class="btn btn-primary btn-sm">+ New User</button>
+        <button id="btn-edit-user"   class="btn btn-ghost   btn-sm">Edit</button>
+        <button id="btn-delete-user" class="btn btn-danger  btn-sm">Delete</button>
+      </div>
+      <table class="users-table">
+        <thead>
+          <tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th></tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+      <p id="admin-error" class="error-msg hidden"></p>
+    </div>
+  </div>
+
+  <!-- ── User form modal ──────────────────────────────────────────────────── -->
+  <div id="modal-user-form" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3 id="user-form-title" class="modal-heading" style="margin-bottom:18px"></h3>
+      <div class="field">
+        <label for="uf-username">Username *</label>
+        <input id="uf-username" type="text" />
+      </div>
+      <div class="field">
+        <label for="uf-password" id="uf-pwd-label">Password *</label>
+        <input id="uf-password" type="password" />
+      </div>
+      <div class="field" style="flex-direction:row;align-items:center;gap:8px">
+        <input id="uf-is-admin" type="checkbox" style="width:16px;height:16px;accent-color:var(--accent)" />
+        <label for="uf-is-admin" style="font-size:13px;font-weight:500">Admin privileges</label>
+      </div>
+      <p id="user-form-error" class="error-msg hidden"></p>
+      <div class="modal-footer">
+        <button id="user-form-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="user-form-save"   class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Form modal ──────────────────────────────────────────────────────── -->
+  <div id="modal-form" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head-row">
+        <h3 id="modal-title" class="modal-heading"></h3>
+        <button id="modal-x" class="btn-close">✕</button>
+      </div>
+      <div id="modal-fields"></div>
+      <p id="modal-error" class="error-msg hidden"></p>
+      <div class="modal-footer">
+        <button id="modal-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="modal-save"   class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast ───────────────────────────────────────────────────────────── -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

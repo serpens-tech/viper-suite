@@ -1,8 +1,6 @@
 # OpenTask
 
-A self-hosted task management application. Run it with a single `docker compose` command — the web client is served directly by the backend, so no separate frontend server is needed.
-
-![OpenTask screenshot](docs/screenshot.png)
+A self-hosted task and budget management suite. Run it with a single `docker compose` command — both web clients are served directly by the backend, no separate frontend server needed.
 
 ---
 
@@ -22,12 +20,23 @@ A self-hosted task management application. Run it with a single `docker compose`
 
 ## Features
 
+**OpenTask**
 - User accounts with JWT authentication
-- Task lists and per-list tasks with priorities and due dates
+- Task lists with per-list tasks, priorities, and due dates
+- Finance flags on tasks — mark a task as income or expense with an amount; completing the task automatically creates a budget entry
 - Admin panel for user management
+- Dark mode support
+
+**OpenBudget**
+- Income and expense tracking with running balance
+- Linked with OpenTask — completed finance tasks create entries automatically
+- Dark mode support
+
+**General**
 - Responsive web UI — works on desktop and mobile browsers
 - Fully self-hosted with PostgreSQL for persistent storage
-- Native desktop wrapper for Linux and Windows (optional)
+- Native desktop wrappers for Linux and Windows
+- Android apps built with Capacitor
 
 ---
 
@@ -37,9 +46,10 @@ A self-hosted task management application. Run it with a single `docker compose`
 |---|---|
 | Backend | FastAPI, SQLAlchemy 2, python-jose, passlib |
 | Database | PostgreSQL 16 |
-| Web Client | Vanilla HTML / CSS / JavaScript |
-| Desktop Client | PyWebView, Capacitor |
-| Packaging | Docker, .deb (Linux), Inno Setup installer (Windows) |
+| Web Clients | Vanilla HTML / CSS / JavaScript |
+| Desktop Clients | PyWebView |
+| Android Clients | Capacitor 7 |
+| Packaging | Docker, .deb (Linux), PyInstaller + Inno Setup (Windows) |
 
 ---
 
@@ -55,8 +65,9 @@ cd opentask
 # 2. Start the application
 docker compose up -d
 
-# 3. Open the web UI
-# http://localhost:8000
+# 3. Open the web UIs
+# OpenTask:   http://localhost:8000/tasks/
+# OpenBudget: http://localhost:8000/budget/
 ```
 
 A default admin account is created automatically on first run:
@@ -74,7 +85,7 @@ To stop the application:
 docker compose down
 ```
 
-All task data is stored in the `opentask_db` Docker volume and persists across restarts. To remove all data as well:
+All data is stored in the `opentask_db` Docker volume and persists across restarts. To remove all data as well:
 
 ```bash
 docker compose down -v
@@ -144,64 +155,121 @@ docker compose up -d db
 uvicorn app.main:app --reload
 ```
 
-The web client is served automatically from `webclient/` at http://localhost:8000.
+- OpenTask web UI:   http://localhost:8000/tasks/
+- OpenBudget web UI: http://localhost:8000/budget/
 
 ### Project structure
 
 ```
 opentask/
-├── app/                  # FastAPI backend
-│   ├── main.py           # Application entry point, static file serving
-│   ├── models.py         # SQLAlchemy models
-│   ├── schemas.py        # Pydantic schemas
-│   ├── auth.py           # JWT authentication logic
-│   ├── database.py       # Database session and engine
-│   └── routers/          # API route handlers (auth, lists, tasks, users)
-├── webclient/            # Web UI (static HTML/CSS/JS)
-├── desktopclient/        # PyWebView desktop wrapper (source available)
-├── androidclient/        # Capacitor Android wrapper (source available)
+├── app/                          # FastAPI backend (shared)
+│   ├── main.py                   # Entry point, static file serving, DB migrations
+│   ├── models.py                 # SQLAlchemy models
+│   ├── schemas.py                # Pydantic schemas
+│   ├── auth.py                   # JWT authentication logic
+│   ├── database.py               # Database session and engine
+│   └── routers/                  # Route handlers: auth, lists, tasks, users
+├── opentask/
+│   ├── webclient/                # OpenTask web UI (HTML/CSS/JS)
+│   ├── desktopclient/            # PyWebView desktop wrapper
+│   │   ├── main.py               # Serves webclient on port 5501
+│   │   ├── build_linux.sh        # Builds .deb installer
+│   │   ├── build_windows.bat     # Builds Windows .exe via PyInstaller
+│   │   ├── opentask_windows.spec # PyInstaller spec
+│   │   └── installer.iss         # Inno Setup script
+│   └── androidclient/            # Capacitor Android wrapper
+│       ├── build_android.sh      # Builds debug APK
+│       ├── capacitor.config.json
+│       └── android/
+├── openbudget/
+│   ├── webclient/                # OpenBudget web UI (HTML/CSS/JS)
+│   ├── desktopclient/            # PyWebView desktop wrapper
+│   │   └── main.py               # Serves webclient on port 5502
+│   └── androidclient/            # Capacitor Android wrapper
+│       ├── build_android_budget.sh
+│       ├── capacitor.config.json
+│       └── android/
 ├── Dockerfile
-└── docker-compose.yml
+├── docker-compose.yml
+└── requirements.txt
 ```
 
 ---
 
 ## Desktop & Mobile Clients
 
-A native desktop wrapper is available for **Linux** and **Windows**, and an Android app is in active development. All clients connect to your own running OpenTask server — they do **not** include a bundled server.
+All clients connect to your own running OpenTask server — they do **not** include a bundled backend. The full source for every client is in this repository.
 
-The source code for the desktop wrapper (`desktopclient/`) and Android wrapper (`androidclient/`) is available in this repository. Pre-built installers and app binaries are a **paid product** and are distributed separately.
+### Desktop (Linux)
 
-### Building the Android app from source
-
-> **Requirements:** Node.js 18+, Android Studio (with Android SDK API 22+), Java 17+
+> **Requirements:** `dpkg-dev`, `python3-venv`
 
 ```bash
-# Run from the project root
-bash build/build_android.sh
+# Run from the project root:
+bash opentask/desktopclient/build_linux.sh
 ```
 
-The script installs dependencies, syncs the web assets from `webclient/` into the Android project, and produces a debug APK at:
-
-```
-androidclient/android/app/build/outputs/apk/debug/app-debug.apk
-```
-
-To open the project in Android Studio for signing and release builds:
+Produces `dist/deb/opentask_1.0.0_amd64.deb`. Install with:
 
 ```bash
-cd androidclient
-npx cap open android
+sudo dpkg -i dist/deb/opentask_1.0.0_amd64.deb
+sudo apt-get install -f    # resolve any missing system deps
+opentask
 ```
 
-| Platform | Status | Pricing |
-|---|---|---|
-| Web (self-hosted) | Available | Free |
-| Linux (`.deb`) | Available | Paid |
-| Windows (`.exe`) | Available | Paid |
-| macOS | Coming soon | Paid |
-| Android | Coming soon | Paid |
-| iOS | Coming soon | Paid |
+### Desktop (Windows)
+
+> **Requirements:** Python 3.10+, [PyInstaller](https://pyinstaller.org), optionally [Inno Setup 6](https://jrsoftware.org/isdl.php)
+
+```bat
+REM Run from the project root:
+opentask\desktopclient\build_windows.bat
+```
+
+Produces `dist\OpenTask\OpenTask.exe`. If Inno Setup is installed, also builds `dist\installer\OpenTask_Setup_1.0.0.exe`.
+
+### Desktop (run from source)
+
+```bash
+# OpenTask (port 5501)
+.venv/bin/python opentask/desktopclient/main.py
+
+# OpenBudget (port 5502)
+.venv/bin/python openbudget/desktopclient/main.py
+```
+
+### Android
+
+> **Requirements:** Node.js 18+, Android Studio (Android SDK API 22+), Java 17+
+
+```bash
+# OpenTask APK — run from the project root:
+bash opentask/androidclient/build_android.sh
+
+# OpenBudget APK — run from the project root:
+bash openbudget/androidclient/build_android_budget.sh
+```
+
+Each script installs Node dependencies, syncs web assets into the Android project, and produces a debug APK:
+
+```
+opentask/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
+openbudget/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Install on a connected device:
+
+```bash
+adb install opentask/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
+adb install openbudget/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+To open in Android Studio for signing and release builds:
+
+```bash
+cd opentask/androidclient && npx cap open android
+cd openbudget/androidclient && npx cap open android
+```
 
 ---
 

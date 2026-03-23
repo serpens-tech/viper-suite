@@ -1,0 +1,12 @@
+{
+  "name": "OpenBudget",
+  "short_name": "OpenBudget",
+  "description": "Personal finance tracking app",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "start_url": "/budget/index.html",
+  "display": "standalone",
+  "background_color": "#16a34a",
+  "theme_color": "#16a34a"
+}

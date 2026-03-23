@@ -1,0 +1,12 @@
+{
+  "appId": "com.openbudget.app",
+  "appName": "OpenBudget",
+  "webDir": "../webclient",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

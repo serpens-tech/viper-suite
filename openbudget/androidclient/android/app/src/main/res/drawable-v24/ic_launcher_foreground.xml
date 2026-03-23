@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Vertical bar of the dollar sign -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,18 L56,18 L56,90 L52,90 Z"/>
+    <!-- S-curve of dollar sign -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M71,33 C71,24 63,20 54,20 C45,20 36,25 36,35 C36,45 45,49 54,51 C63,53 72,57 72,68 C72,78 63,83 54,83 C45,83 36,78 36,69"/>
+</vector>

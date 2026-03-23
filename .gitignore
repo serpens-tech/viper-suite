@@ -16,10 +16,11 @@ env/
 # Distribution / packaging
 dist/
 
-# Build artifacts only (scripts are tracked)
+# Build artifacts
 build/*.deb
 build/*.exe
 build/*.apk
+dist/
 
 # Environment variables
 .env
@@ -28,17 +29,25 @@ build/*.apk
 # Docker volumes / local data
 postgres-data/
 
-# Android / Capacitor
-androidclient/node_modules/
-androidclient/.gradle/
-# Android build output and generated project (pre-built APK is a paid product)
-androidclient/android/app/build/
-androidclient/android/build/
-androidclient/android/.gradle/
-androidclient/android/.idea/
-androidclient/android/local.properties
-androidclient/android/capacitor-cordova-android-plugins/
-androidclient/.gradle/
+# Android / Capacitor — OpenTask
+opentask/androidclient/node_modules/
+opentask/androidclient/.gradle/
+opentask/androidclient/android/app/build/
+opentask/androidclient/android/build/
+opentask/androidclient/android/.gradle/
+opentask/androidclient/android/.idea/
+opentask/androidclient/android/local.properties
+opentask/androidclient/android/capacitor-cordova-android-plugins/
+
+# Android / Capacitor — OpenBudget
+openbudget/androidclient/node_modules/
+openbudget/androidclient/.gradle/
+openbudget/androidclient/android/app/build/
+openbudget/androidclient/android/build/
+openbudget/androidclient/android/.gradle/
+openbudget/androidclient/android/.idea/
+openbudget/androidclient/android/local.properties
+openbudget/androidclient/android/capacitor-cordova-android-plugins/
 
 # IDE
 .vscode/
