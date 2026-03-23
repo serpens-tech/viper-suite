@@ -28,6 +28,7 @@ services:
       # Change this secret in production!
       SECRET_KEY: change-me-in-production-use-a-long-random-string
       DATABASE_URL: postgresql://opentask:opentask@db:5432/opentask
+      ACCESS_TOKEN_EXPIRE_MINUTES: 43200
 
 volumes:
   opentask_db:

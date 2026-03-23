@@ -6,7 +6,6 @@ __pycache__/
 .Python
 *.egg-info/
 dist/
-build/
 .venv/
 venv/
 env/
@@ -15,8 +14,12 @@ env/
 *.spec.bak
 
 # Distribution / packaging
-*.deb
-*.exe
+dist/
+
+# Build artifacts only (scripts are tracked)
+build/*.deb
+build/*.exe
+build/*.apk
 
 # Environment variables
 .env
@@ -24,6 +27,18 @@ env/
 
 # Docker volumes / local data
 postgres-data/
+
+# Android / Capacitor
+androidclient/node_modules/
+androidclient/.gradle/
+# Android build output and generated project (pre-built APK is a paid product)
+androidclient/android/app/build/
+androidclient/android/build/
+androidclient/android/.gradle/
+androidclient/android/.idea/
+androidclient/android/local.properties
+androidclient/android/capacitor-cordova-android-plugins/
+androidclient/.gradle/
 
 # IDE
 .vscode/

@@ -14,7 +14,7 @@ A self-hosted task management application. Run it with a single `docker compose`
 - [Configuration](#configuration)
 - [API Documentation](#api-documentation)
 - [Development Setup](#development-setup)
-- [Desktop Client](#desktop-client)
+- [Desktop & Mobile Clients](#desktop--mobile-clients)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -38,7 +38,7 @@ A self-hosted task management application. Run it with a single `docker compose`
 | Backend | FastAPI, SQLAlchemy 2, python-jose, passlib |
 | Database | PostgreSQL 16 |
 | Web Client | Vanilla HTML / CSS / JavaScript |
-| Desktop Client | PyWebView |
+| Desktop Client | PyWebView, Capacitor |
 | Packaging | Docker, .deb (Linux), Inno Setup installer (Windows) |
 
 ---
@@ -159,19 +159,40 @@ opentask/
 │   └── routers/          # API route handlers (auth, lists, tasks, users)
 ├── webclient/            # Web UI (static HTML/CSS/JS)
 ├── desktopclient/        # PyWebView desktop wrapper (source available)
+├── androidclient/        # Capacitor Android wrapper (source available)
 ├── Dockerfile
 └── docker-compose.yml
 ```
 
 ---
 
-## Desktop Client
+## Desktop & Mobile Clients
 
-A native desktop wrapper is available for **Linux** and **Windows**. It opens the OpenTask web UI in a frameless native window — no browser required.
+A native desktop wrapper is available for **Linux** and **Windows**, and an Android app is in active development. All clients connect to your own running OpenTask server — they do **not** include a bundled server.
 
-> The desktop client connects to your own running OpenTask server (self-hosted or remote). It does **not** include a bundled server.
+The source code for the desktop wrapper (`desktopclient/`) and Android wrapper (`androidclient/`) is available in this repository. Pre-built installers and app binaries are a **paid product** and are distributed separately.
 
-The source code for the desktop wrapper (`desktopclient/`) is available in this repository. Pre-built installers (`.deb` and `.exe`) are a **paid product** and are distributed separately.
+### Building the Android app from source
+
+> **Requirements:** Node.js 18+, Android Studio (with Android SDK API 22+), Java 17+
+
+```bash
+# Run from the project root
+bash build/build_android.sh
+```
+
+The script installs dependencies, syncs the web assets from `webclient/` into the Android project, and produces a debug APK at:
+
+```
+androidclient/android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+To open the project in Android Studio for signing and release builds:
+
+```bash
+cd androidclient
+npx cap open android
+```
 
 | Platform | Status | Pricing |
 |---|---|---|

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>OpenTask</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -13,6 +13,9 @@
   <!-- ── Top bar ─────────────────────────────────────────────────────────── -->
   <header class="topbar">
     <div class="topbar-left">
+      <button id="btn-hamburger" class="btn-hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
       <svg width="26" height="26" viewBox="0 0 36 36" fill="none">
         <rect width="36" height="36" rx="10" fill="#7c3aed"/>
         <path d="M10 18l6 6 10-12" stroke="white" stroke-width="2.8"
@@ -30,6 +33,7 @@
 
   <!-- ── Main layout ─────────────────────────────────────────────────────── -->
   <div class="layout">
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
 
     <!-- Sidebar: lists -->
     <aside class="sidebar">
@@ -38,6 +42,16 @@
         <button id="btn-new-list" class="btn btn-icon" title="New list">＋</button>
       </div>
       <ul id="lists-ul" class="lists-ul"></ul>
+
+      <!-- sidebar footer: shown on mobile only -->
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-user">
+          <span id="sidebar-username" class="sidebar-footer-name"></span>
+        </div>
+        <button id="btn-admin-sidebar" class="btn btn-ghost btn-sm btn-full hidden">&#9733; Admin Panel</button>
+        <button id="btn-server-sidebar" class="btn btn-ghost btn-sm btn-full">&#9881; Change Server</button>
+        <button id="btn-logout-sidebar" class="btn btn-danger btn-sm btn-full">Logout</button>
+      </div>
     </aside>
 
     <!-- Main panel: tasks -->

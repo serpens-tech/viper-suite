@@ -94,14 +94,59 @@ const taskActions  = document.getElementById('task-actions');
 const tasksEmpty   = document.getElementById('tasks-empty');
 const topbarUser   = document.getElementById('topbar-user');
 const btnAdmin     = document.getElementById('btn-admin');
+const btnAdminSidebar  = document.getElementById('btn-admin-sidebar');
+const sidebarUsername  = document.getElementById('sidebar-username');
+
+// ── Mobile sidebar toggle ─────────────────────────────────────────────────────
+function openSidebar()  { document.body.classList.add('sidebar-open'); }
+function closeSidebar() { document.body.classList.remove('sidebar-open'); }
+function toggleSidebar(){ document.body.classList.toggle('sidebar-open'); }
+
+document.getElementById('btn-hamburger').addEventListener('click', toggleSidebar);
+document.getElementById('sidebar-backdrop').addEventListener('click', closeSidebar);
+
+// ── Swipe gesture for sidebar ─────────────────────────────────────────────────
+(function () {
+  let startX = null, startY = null;
+  const EDGE = 28;      // px from left edge to trigger open swipe
+  const THRESHOLD = 60; // min horizontal distance to register a swipe
+  const MAX_VERT = 80;  // max vertical drift allowed
+
+  document.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (startX === null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = Math.abs(t.clientY - startY);
+    if (dy > MAX_VERT) { startX = null; return; }
+
+    const isOpen = document.body.classList.contains('sidebar-open');
+
+    // Swipe right from left edge → open
+    if (!isOpen && dx > THRESHOLD && startX < EDGE) openSidebar();
+    // Swipe left anywhere when open → close
+    else if (isOpen && dx < -THRESHOLD) closeSidebar();
+
+    startX = null;
+  }, { passive: true });
+})();
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async () => {
   try {
     currentUser = await api.me();
-    topbarUser.textContent = currentUser.is_admin
-      ? `★ ${currentUser.username}` : currentUser.username;
-    if (currentUser.is_admin) btnAdmin.classList.remove('hidden');
+    const label = currentUser.is_admin ? `★ ${currentUser.username}` : currentUser.username;
+    topbarUser.textContent = label;
+    sidebarUsername.textContent = label;
+    if (currentUser.is_admin) {
+      btnAdmin.classList.remove('hidden');
+      btnAdminSidebar.classList.remove('hidden');
+    }
     await loadLists();
   } catch (e) {
     toast(e.message, true);
@@ -131,6 +176,7 @@ async function selectList(lst) {
   selectedList = lst;
   tasksHeading.textContent = lst.title;
   taskActions.classList.remove('hidden');
+  closeSidebar();           // auto-close on mobile after selecting a list
   renderLists();  // refresh active highlight
   await loadTasks();
 }
@@ -337,6 +383,10 @@ function openFormModal(title, fields, onSave) {
 
 // ── Admin panel ───────────────────────────────────────────────────────────────
 document.getElementById('btn-admin').addEventListener('click', openAdminPanel);
+document.getElementById('btn-admin-sidebar').addEventListener('click', () => {
+  closeSidebar();
+  openAdminPanel();
+});
 document.getElementById('admin-close').addEventListener('click', () => {
   document.getElementById('modal-admin').classList.add('hidden');
 });
@@ -480,13 +530,19 @@ document.getElementById('btn-logout').addEventListener('click', () => {
   localStorage.removeItem('ot_token');
   window.location.href = 'index.html';
 });
+document.getElementById('btn-logout-sidebar').addEventListener('click', () => {
+  localStorage.removeItem('ot_token');
+  window.location.href = 'index.html';
+});
 
 // ── Change server ──────────────────────────────────────────────────────────────
-document.getElementById('btn-server').addEventListener('click', () => {
+function changeServer() {
   localStorage.removeItem('ot_token');
   localStorage.removeItem('ot_server');
   window.location.href = 'index.html';
-});
+}
+document.getElementById('btn-server').addEventListener('click', changeServer);
+document.getElementById('btn-server-sidebar').addEventListener('click', changeServer);
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 function escHtml(str) {
