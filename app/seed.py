@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Seed the database with a default admin user.
 
-Usage:
-    python seed.py                          # admin / admin
-    python seed.py myuser mypassword        # custom credentials
-    python seed.py myuser mypassword --admin
+Usage (run from project root):
+    python app/seed.py                          # admin / admin
+    python app/seed.py myuser mypassword        # custom credentials
+    python app/seed.py myuser mypassword --admin
 """
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 from app.database import Base, SessionLocal, engine
 from app.models import User
