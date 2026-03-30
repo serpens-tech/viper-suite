@@ -1,7 +1,7 @@
 {
-  "name": "openbudget-android",
+  "name": "leaf-viper-android",
   "version": "1.0.0",
-  "description": "OpenBudget Android Client",
+  "description": "Leaf Viper Android Client",
   "scripts": {
     "sync": "cap sync android",
     "open": "cap open android",

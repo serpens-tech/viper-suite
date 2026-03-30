@@ -1,7 +1,7 @@
 {
-  "name": "opentask-android",
+  "name": "crossed-viper-android",
   "version": "1.0.0",
-  "description": "OpenTask Android Client",
+  "description": "Crossed Viper Android Client",
   "scripts": {
     "sync": "cap sync android",
     "open": "cap open android",

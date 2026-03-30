@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="OpenTask API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Viper Suite API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -66,17 +66,33 @@ def budget_redirect():
 def tasks_redirect():
     return RedirectResponse(url="/tasks/")
 
+@app.get("/tasks/", include_in_schema=False)
+@app.get("/tasks/index.html", include_in_schema=False)
+def tasks_index():
+    """Serve index.html, injecting CROSSED_VIPER_SERVER via ?server= param if set."""
+    _index = os.path.join(os.path.dirname(__file__), "..", "crossed-viper", "webclient", "index.html")
+    _server = os.environ.get("CROSSED_VIPER_SERVER", "").strip().rstrip("/")
+    if not _server:
+        return FileResponse(_index)
+    from fastapi.responses import HTMLResponse
+    from urllib.parse import quote as _quote
+    with open(_index, "r", encoding="utf-8") as f:
+        html = f.read()
+    snippet = f'<script>if(!localStorage.getItem("ot_server")){{localStorage.setItem("ot_server","{_server}");}}</script>'
+    html = html.replace("</head>", snippet + "\n</head>", 1)
+    return HTMLResponse(content=html)
+
 @app.get("/", include_in_schema=False)
 def root():
     landing = os.path.join(os.path.dirname(__file__), "landing.html")
     return FileResponse(landing)
 
 # Serve the budget web client at /budget — must be mounted before /tasks.
-_budgetclient = os.path.join(os.path.dirname(__file__), "..", "openbudget", "webclient")
+_budgetclient = os.path.join(os.path.dirname(__file__), "..", "leaf-viper", "webclient")
 if os.path.isdir(_budgetclient):
     app.mount("/budget", StaticFiles(directory=_budgetclient, html=True), name="budgetclient")
 
 # Serve the task web client at /tasks.
-_webclient = os.path.join(os.path.dirname(__file__), "..", "opentask", "webclient")
+_webclient = os.path.join(os.path.dirname(__file__), "..", "crossed-viper", "webclient")
 if os.path.isdir(_webclient):
     app.mount("/tasks", StaticFiles(directory=_webclient, html=True), name="webclient")

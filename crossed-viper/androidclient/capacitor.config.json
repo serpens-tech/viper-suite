@@ -1,6 +1,6 @@
 {
-  "appId": "com.openbudget.app",
-  "appName": "OpenBudget",
+  "appId": "com.crossedviper.app",
+  "appName": "Crossed Viper",
   "webDir": "../webclient",
   "server": {
     "androidScheme": "https",

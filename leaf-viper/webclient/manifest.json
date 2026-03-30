@@ -1,6 +1,6 @@
 {
-  "name": "OpenBudget",
-  "short_name": "OpenBudget",
+  "name": "Leaf Viper",
+  "short_name": "LeafViper",
   "description": "Personal finance tracking app",
   "icons": [
     { "src": "icon-256.png", "sizes": "256x256", "type": "image/png" },

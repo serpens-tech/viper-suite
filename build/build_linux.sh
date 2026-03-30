@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build a .deb installer for OpenTask on Debian/Ubuntu.
+# Build a .deb installer for Crossed Viper on Debian/Ubuntu.
 #
 # Requirements:
 #   sudo apt install dpkg-dev
@@ -11,34 +11,34 @@ set -euo pipefail
 
 VERSION="1.0.0"
 ARCH="amd64"
-PKG="opentask_${VERSION}_${ARCH}"
+PKG="crossed-viper_${VERSION}_${ARCH}"
 DIST="dist/deb/${PKG}"
 
 echo "==> Cleaning previous build..."
 rm -rf dist/deb
 mkdir -p "${DIST}/DEBIAN"
-mkdir -p "${DIST}/opt/opentask"
+mkdir -p "${DIST}/opt/crossed-viper"
 mkdir -p "${DIST}/usr/bin"
 mkdir -p "${DIST}/usr/share/applications"
 mkdir -p "${DIST}/usr/share/icons/hicolor/256x256/apps"
 
 echo "==> Copying application files..."
-cp -r app/           "${DIST}/opt/opentask/app"
-cp -r opentask/webclient/   "${DIST}/opt/opentask/webclient"
-cp -r desktopclient/ "${DIST}/opt/opentask/desktopclient"
-cp    requirements.txt "${DIST}/opt/opentask/requirements.txt"
-cp opentask/webclient/icon-256.png "${DIST}/usr/share/icons/hicolor/256x256/apps/opentask.png"
+cp -r app/           "${DIST}/opt/crossed-viper/app"
+cp -r crossed-viper/webclient/   "${DIST}/opt/crossed-viper/webclient"
+cp -r desktopclient/ "${DIST}/opt/crossed-viper/desktopclient"
+cp    requirements.txt "${DIST}/opt/crossed-viper/requirements.txt"
+cp crossed-viper/webclient/icon-256.png "${DIST}/usr/share/icons/hicolor/256x256/apps/crossed-viper.png"
 
 # ── DEBIAN/control ────────────────────────────────────────────────────────────
 cat > "${DIST}/DEBIAN/control" <<EOF
-Package: opentask
+Package: crossed-viper
 Version: ${VERSION}
 Section: utils
 Priority: optional
 Architecture: ${ARCH}
-Maintainer: OpenTask <opentask@example.com>
+Maintainer: Crossed Viper <crossed-viper@example.com>
 Depends: python3 (>= 3.10), python3-pip, python3-venv, python3-gi, python3-gi-cairo, gir1.2-webkit2-4.1
-Description: OpenTask — Task Management Application
+Description: Crossed Viper — Task Management Application
  A desktop task-management application with a FastAPI backend
  and a PyWebView-based frontend.
 EOF
@@ -47,41 +47,41 @@ EOF
 cat > "${DIST}/DEBIAN/postinst" <<'POSTINST'
 #!/bin/bash
 set -e
-echo "Setting up OpenTask Python environment..."
-cd /opt/opentask
+echo "Setting up Crossed Viper Python environment..."
+cd /opt/crossed-viper
 python3 -m venv --system-site-packages .venv 2>/dev/null || true
 .venv/bin/pip install --upgrade pip -q
 .venv/bin/pip install -r requirements.txt -q
 .venv/bin/pip install "pywebview>=4.0.0" -q
-echo "OpenTask is ready."
+echo "Crossed Viper is ready."
 POSTINST
 chmod 755 "${DIST}/DEBIAN/postinst"
 
 # ── DEBIAN/prerm ──────────────────────────────────────────────────────────────
 cat > "${DIST}/DEBIAN/prerm" <<'PRERM'
 #!/bin/bash
-rm -rf /opt/opentask/.venv
+rm -rf /opt/crossed-viper/.venv
 PRERM
 chmod 755 "${DIST}/DEBIAN/prerm"
 
 # ── Launcher script ───────────────────────────────────────────────────────────
-cat > "${DIST}/opt/opentask/opentask" <<'LAUNCHER'
+cat > "${DIST}/opt/crossed-viper/crossed-viper" <<'LAUNCHER'
 #!/bin/bash
-cd /opt/opentask
+cd /opt/crossed-viper
 exec .venv/bin/python desktopclient/main.py "$@"
 LAUNCHER
-chmod +x "${DIST}/opt/opentask/opentask"
+chmod +x "${DIST}/opt/crossed-viper/crossed-viper"
 
-ln -s /opt/opentask/opentask "${DIST}/usr/bin/opentask"
+ln -s /opt/crossed-viper/crossed-viper "${DIST}/usr/bin/crossed-viper"
 
 # ── .desktop entry ────────────────────────────────────────────────────────────
-cat > "${DIST}/usr/share/applications/opentask.desktop" <<EOF
+cat > "${DIST}/usr/share/applications/crossed-viper.desktop" <<EOF
 [Desktop Entry]
-Name=OpenTask
-Icon=opentask
+Name=Crossed Viper
+Icon=crossed-viper
 GenericName=Task Manager
 Comment=Manage your tasks and to-do lists
-Exec=/opt/opentask/opentask
+Exec=/opt/crossed-viper/crossed-viper
 Terminal=false
 Type=Application
 Categories=Utility;ProjectManagement;Office;
@@ -99,4 +99,4 @@ echo "Install with:"
 echo "  sudo dpkg -i dist/deb/${PKG}.deb"
 echo "  sudo apt-get install -f    # fix any missing system deps"
 echo ""
-echo "Then run:  opentask"
+echo "Then run:  crossed-viper"

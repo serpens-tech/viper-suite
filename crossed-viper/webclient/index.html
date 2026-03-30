@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenBudget — Sign In</title>
+  <title>Crossed Viper — Sign In</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="manifest" href="manifest.json" />
-  <script>(function(){var s=localStorage.getItem('ob_theme'),d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(s===null&&d))document.documentElement.setAttribute('data-theme','dark');else if(s==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
+  <script>(function(){var s=localStorage.getItem('ot_theme'),d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(s===null&&d))document.documentElement.setAttribute('data-theme','dark');else if(s==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
 </head>
 <body class="login-body">
 
@@ -16,13 +16,13 @@
   <!-- ── Server setup screen ─────────────────────────────────────────────── -->
   <div id="setup-card" class="login-card hidden">
     <div class="login-logo">
-      <img src="favicon.svg" width="64" height="64" style="border-radius:14px" alt="OpenBudget" />
+      <img src="favicon.svg" width="64" height="64" style="border-radius:14px" alt="Crossed Viper" />
     </div>
-    <h1 class="login-title">OpenBudget</h1>
+    <h1 class="login-title">Crossed Viper</h1>
     <p class="login-sub">Enter your server address</p>
     <div class="field">
       <label for="server-url">Server URL</label>
-      <input id="server-url" type="url" placeholder="https://myserver.com" />
+      <input id="server-url" type="url" placeholder="https://opentask.example.com" />
     </div>
     <p id="setup-error" class="error-msg hidden"></p>
     <button id="setup-btn" class="btn btn-primary btn-full">Connect</button>
@@ -31,9 +31,9 @@
   <!-- ── Login screen ────────────────────────────────────────────────────── -->
   <div id="login-card" class="login-card hidden">
     <div class="login-logo">
-      <img src="favicon.svg" width="64" height="64" style="border-radius:14px" alt="OpenBudget" />
+      <img src="favicon.svg" width="64" height="64" style="border-radius:14px" alt="Crossed Viper" />
     </div>
-    <h1 class="login-title">OpenBudget</h1>
+    <h1 class="login-title">Crossed Viper</h1>
     <p id="login-server-label" class="login-sub" style="font-size:.78rem;color:#9ca3af"></p>
     <p class="login-sub">Sign in to your account</p>
 
@@ -48,7 +48,9 @@
         <input id="password" type="password" autocomplete="current-password"
                placeholder="••••••" required />
       </div>
+
       <p id="login-error" class="error-msg hidden"></p>
+
       <button type="submit" class="btn btn-primary btn-full" id="login-btn">
         Sign In
       </button>
@@ -59,15 +61,18 @@
   </div>
 
   <script>
-    const serverUrl = () => (localStorage.getItem('ob_server') || '').replace(/\/$/, '');
+    const _CAP      = typeof window.Capacitor !== 'undefined' ||
+                      window.location.origin === 'https://localhost' ||
+                      window.location.origin === 'capacitor://localhost';
+    const PATH_APP  = _CAP ? 'app.html' : '/tasks/app.html';
+    const serverUrl = () => (localStorage.getItem('ot_server') || '').replace(/\/$/, '');    
 
     function showSetup(prefill) {
       document.getElementById('login-card').classList.add('hidden');
       const card = document.getElementById('setup-card');
       card.classList.remove('hidden');
-      const inp = document.getElementById('server-url');
-      inp.value = prefill || (isCapacitor ? '' : window.location.origin);
-      inp.focus();
+      if (prefill) document.getElementById('server-url').value = prefill;
+      document.getElementById('server-url').focus();
     }
 
     function showLogin() {
@@ -79,26 +84,16 @@
     }
 
     // ── Boot ──────────────────────────────────────────────────────────────────
-    // On Capacitor/Android, window.location.origin is "https://localhost" — NOT the server
-    const isCapacitor = typeof window.Capacitor !== 'undefined' ||
-                        window.location.origin === 'https://localhost' ||
-                        window.location.origin === 'capacitor://localhost';
+    // If OPENTASK_SERVER env var was injected via ?server= param, save it now
+    (function () {
+      const p = new URLSearchParams(window.location.search).get('server');
+      if (p) localStorage.setItem('ot_server', p.replace(/\/$/, ''));
+    })();
 
-    // Clear stale value saved by old builds on Capacitor
-    if (isCapacitor && localStorage.getItem('ob_server') === window.location.origin) {
-      localStorage.removeItem('ob_server');
-    }
-
-    if (localStorage.getItem('ob_token')) {
-      window.location.href = isCapacitor ? 'app.html' : '/budget/app.html';
+    if (localStorage.getItem('ot_token')) {
+      window.location.href = PATH_APP;
     } else if (!serverUrl()) {
-      if (isCapacitor) {
-        showSetup();
-      } else {
-        // Web browser — same-server deployment, use current origin
-        localStorage.setItem('ob_server', window.location.origin);
-        showLogin();
-      }
+      showSetup();
     } else {
       showLogin();
     }
@@ -108,69 +103,36 @@
       const errEl = document.getElementById('setup-error');
       const btn   = document.getElementById('setup-btn');
       errEl.classList.add('hidden');
+
       let url = document.getElementById('server-url').value.trim().replace(/\/$/, '');
       if (!url) { errEl.textContent = 'Please enter a server URL.'; errEl.classList.remove('hidden'); return; }
+      if (!/^https?:\/\//i.test(url)) url = 'http://' + url;
+
       btn.disabled = true;
-      btn.textContent = 'Connecting...';
+      btn.textContent = 'Connecting…';
       try {
-        const res = await fetch(`${url}/auth/login`, { method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: 'username=_probe_&password=_probe_' });
-        if (res.status === 422 || res.status === 401 || res.status === 200) {
-          localStorage.setItem('ob_server', url);
-          showLogin();
-        } else {
-          throw new Error(`Unexpected status: ${res.status}`);
-        }
-      } catch (e) {
-        errEl.textContent = e.message.includes('fetch') ? 'Cannot connect to server.' : e.message;
+        const res = await fetch(`${url}/`, { signal: AbortSignal.timeout(6000) });
+        if (!res.ok) throw new Error(`Server responded with HTTP ${res.status}`);
+        localStorage.setItem('ot_server', url);
+        showLogin();
+      } catch (err) {
+        errEl.textContent = err.message.includes('fetch') ? 'Cannot reach server.' : err.message;
         errEl.classList.remove('hidden');
       } finally {
         btn.disabled = false;
         btn.textContent = 'Connect';
       }
     });
-
-    // ── Login form ────────────────────────────────────────────────────────────
-    document.getElementById('login-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      const errEl = document.getElementById('login-error');
-      const btn   = document.getElementById('login-btn');
-      errEl.classList.add('hidden');
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      if (!username || !password) {
-        errEl.textContent = 'Please enter your username and password.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = 'Signing in...';
-      try {
-        const res = await fetch(`${serverUrl()}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({ username, password }),
-        });
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j.detail || `Error ${res.status}`);
-        }
-        const { access_token } = await res.json();
-        localStorage.setItem('ob_token', access_token);
-        window.location.href = isCapacitor ? 'app.html' : '/budget/app.html';
-      } catch (e) {
-        errEl.textContent = e.message;
-        errEl.classList.remove('hidden');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Sign In';
-      }
+    document.getElementById('server-url').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('setup-btn').click();
     });
 
-    document.getElementById('change-server-btn').addEventListener('click', () => showSetup(serverUrl()));
+    // ── Change server ─────────────────────────────────────────────────────────
+    document.getElementById('change-server-btn').addEventListener('click', () => {
+      showSetup(serverUrl());
+    });
 
-    // ── Theme toggle ──────────────────────────────────────────────────────────
+    // ── Theme toggle ───────────────────────────────────────────────────────────────
     (function() {
       const btn = document.getElementById('btn-theme');
       function updateBtn() {
@@ -180,11 +142,45 @@
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const next = isDark ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('ob_theme', next);
+        localStorage.setItem('ot_theme', next);
         updateBtn();
       });
       updateBtn();
     })();
+
+    // ── Login form ────────────────────────────────────────────────────────────
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('login-error');
+      const btn   = document.getElementById('login-btn');
+      errEl.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const body = new URLSearchParams({ username, password });
+        const res  = await fetch(`${serverUrl()}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail || `HTTP ${res.status}`);
+        }
+        const { access_token } = await res.json();
+        localStorage.setItem('ot_token', access_token);
+        window.location.href = PATH_APP;
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
   </script>
 </body>
 </html>

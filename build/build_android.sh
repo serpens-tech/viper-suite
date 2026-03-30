@@ -16,7 +16,7 @@ set -euo pipefail
 
 # Always run from project root regardless of where the script is invoked from
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd .. && pwd)"
-cd "$ROOT/opentask/androidclient"
+cd "$ROOT/crossed-viper/androidclient"
 
 echo "==> Installing Node dependencies..."
 npm install
@@ -38,10 +38,10 @@ cd android
 APK="app/build/outputs/apk/debug/app-debug.apk"
 echo ""
 echo "Done!"
-echo "APK: opentask/androidclient/android/${APK}"
+echo "APK: crossed-viper/androidclient/android/${APK}"
 echo ""
 echo "Install on a connected device:"
-echo "  adb install opentask/androidclient/android/${APK}"
+echo "  adb install crossed-viper/androidclient/android/${APK}"
 echo ""
 echo "Or open the project in Android Studio:"
-echo "  cd opentask/androidclient && npx cap open android"
+echo "  cd crossed-viper/androidclient && npx cap open android"

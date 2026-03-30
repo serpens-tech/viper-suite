@@ -1,4 +1,4 @@
-# OpenTask
+# Viper Suite
 
 A self-hosted task and budget management suite. Run it with a single `docker compose` command — both web clients are served directly by the backend, no separate frontend server needed.
 
@@ -20,16 +20,16 @@ A self-hosted task and budget management suite. Run it with a single `docker com
 
 ## Features
 
-**OpenTask**
+**Crossed Viper**
 - User accounts with JWT authentication
 - Task lists with per-list tasks, priorities, and due dates
 - Finance flags on tasks — mark a task as income or expense with an amount; completing the task automatically creates a budget entry
 - Admin panel for user management
 - Dark mode support
 
-**OpenBudget**
+**Leaf Viper**
 - Income and expense tracking with running balance
-- Linked with OpenTask — completed finance tasks create entries automatically
+- Linked with Crossed Viper — completed finance tasks create entries automatically
 - Dark mode support
 
 **General**
@@ -59,15 +59,15 @@ A self-hosted task and budget management suite. Run it with a single `docker com
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/opentask.git
-cd opentask
+git clone https://github.com/your-username/viper-suite.git
+cd viper-suite
 
 # 2. Start the application
 docker compose up -d
 
 # 3. Open the web UIs
-# OpenTask:   http://localhost:8000/tasks/
-# OpenBudget: http://localhost:8000/budget/
+# Crossed Viper: http://localhost:8000/tasks/
+# Leaf Viper:    http://localhost:8000/budget/
 ```
 
 A default admin account is created automatically on first run:
@@ -85,7 +85,7 @@ To stop the application:
 docker compose down
 ```
 
-All data is stored in the `opentask_db` Docker volume and persists across restarts. To remove all data as well:
+All data is stored in the `viper_db` Docker volume and persists across restarts. To remove all data as well:
 
 ```bash
 docker compose down -v
@@ -106,7 +106,8 @@ Environment variables are set in `docker-compose.yml`. The most important ones:
 | Variable | Default | Description |
 |---|---|---|
 | `SECRET_KEY` | `change-me-in-production-...` | Secret used to sign JWT tokens. **Must be changed in production.** |
-| `DATABASE_URL` | `postgresql://opentask:opentask@db:5432/opentask` | PostgreSQL connection string |
+| `DATABASE_URL` | `postgresql://vipersuite:vipersuite@db:5432/vipersuite` | PostgreSQL connection string |
+| `CROSSED_VIPER_SERVER` | *(empty)* | If set, the web client skips the server setup screen on first load |
 
 Generate a secure key with:
 
@@ -138,8 +139,8 @@ The interactive API docs are available while the server is running:
 
 ```bash
 # Clone and enter the project
-git clone https://github.com/your-username/opentask.git
-cd opentask
+git clone https://github.com/your-username/viper-suite.git
+cd viper-suite
 
 # Create and activate a virtual environment
 python3 -m venv .venv
@@ -155,13 +156,13 @@ docker compose up -d db
 uvicorn app.main:app --reload
 ```
 
-- OpenTask web UI:   http://localhost:8000/tasks/
-- OpenBudget web UI: http://localhost:8000/budget/
+- Crossed Viper web UI: http://localhost:8000/tasks/
+- Leaf Viper web UI:    http://localhost:8000/budget/
 
 ### Project structure
 
 ```
-opentask/
+viper-suite/
 ├── app/                          # FastAPI backend (shared)
 │   ├── main.py                   # Entry point, static file serving, DB migrations
 │   ├── models.py                 # SQLAlchemy models
@@ -169,8 +170,8 @@ opentask/
 │   ├── auth.py                   # JWT authentication logic
 │   ├── database.py               # Database session and engine
 │   └── routers/                  # Route handlers: auth, lists, tasks, users
-├── opentask/
-│   ├── webclient/                # OpenTask web UI (HTML/CSS/JS)
+├── crossed-viper/
+│   ├── webclient/                # Crossed Viper web UI (HTML/CSS/JS)
 │   ├── desktopclient/            # PyWebView desktop wrapper
 │   │   ├── main.py               # Serves webclient on port 5501
 │   │   ├── build_linux.sh        # Builds .deb installer
@@ -181,8 +182,8 @@ opentask/
 │       ├── build_android.sh      # Builds debug APK
 │       ├── capacitor.config.json
 │       └── android/
-├── openbudget/
-│   ├── webclient/                # OpenBudget web UI (HTML/CSS/JS)
+├── leaf-viper/
+│   ├── webclient/                # Leaf Viper web UI (HTML/CSS/JS)
 │   ├── desktopclient/            # PyWebView desktop wrapper
 │   │   └── main.py               # Serves webclient on port 5502
 │   └── androidclient/            # Capacitor Android wrapper
@@ -198,7 +199,7 @@ opentask/
 
 ## Desktop & Mobile Clients
 
-All clients connect to your own running OpenTask server — they do **not** include a bundled backend. The full source for every client is in this repository.
+All clients connect to your own running Viper Suite server — they do **not** include a bundled backend. The full source for every client is in this repository.
 
 ### Desktop (Linux)
 
@@ -206,15 +207,15 @@ All clients connect to your own running OpenTask server — they do **not** incl
 
 ```bash
 # Run from the project root:
-bash opentask/desktopclient/build_linux.sh
+bash crossed-viper/desktopclient/build_linux.sh
 ```
 
-Produces `dist/deb/opentask_1.0.0_amd64.deb`. Install with:
+Produces `dist/deb/crossed-viper_1.0.0_amd64.deb`. Install with:
 
 ```bash
-sudo dpkg -i dist/deb/opentask_1.0.0_amd64.deb
+sudo dpkg -i dist/deb/crossed-viper_1.0.0_amd64.deb
 sudo apt-get install -f    # resolve any missing system deps
-opentask
+crossed-viper
 ```
 
 ### Desktop (Windows)
@@ -223,19 +224,19 @@ opentask
 
 ```bat
 REM Run from the project root:
-opentask\desktopclient\build_windows.bat
+crossed-viper\desktopclient\build_windows.bat
 ```
 
-Produces `dist\OpenTask\OpenTask.exe`. If Inno Setup is installed, also builds `dist\installer\OpenTask_Setup_1.0.0.exe`.
+Produces `dist\CrossedViper\CrossedViper.exe`. If Inno Setup is installed, also builds `dist\installer\CrossedViper_Setup_1.0.0.exe`.
 
 ### Desktop (run from source)
 
 ```bash
-# OpenTask (port 5501)
-.venv/bin/python opentask/desktopclient/main.py
+# Crossed Viper (port 5501)
+.venv/bin/python crossed-viper/desktopclient/main.py
 
-# OpenBudget (port 5502)
-.venv/bin/python openbudget/desktopclient/main.py
+# Leaf Viper (port 5502)
+.venv/bin/python leaf-viper/desktopclient/main.py
 ```
 
 ### Android
@@ -243,32 +244,32 @@ Produces `dist\OpenTask\OpenTask.exe`. If Inno Setup is installed, also builds `
 > **Requirements:** Node.js 18+, Android Studio (Android SDK API 22+), Java 17+
 
 ```bash
-# OpenTask APK — run from the project root:
-bash opentask/androidclient/build_android.sh
+# Crossed Viper APK — run from the project root:
+bash crossed-viper/androidclient/build_android.sh
 
-# OpenBudget APK — run from the project root:
-bash openbudget/androidclient/build_android_budget.sh
+# Leaf Viper APK — run from the project root:
+bash leaf-viper/androidclient/build_android_budget.sh
 ```
 
 Each script installs Node dependencies, syncs web assets into the Android project, and produces a debug APK:
 
 ```
-opentask/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
-openbudget/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
+crossed-viper/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
+leaf-viper/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 Install on a connected device:
 
 ```bash
-adb install opentask/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
-adb install openbudget/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
+adb install crossed-viper/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
+adb install leaf-viper/androidclient/android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 To open in Android Studio for signing and release builds:
 
 ```bash
-cd opentask/androidclient && npx cap open android
-cd openbudget/androidclient && npx cap open android
+cd crossed-viper/androidclient && npx cap open android
+cd leaf-viper/androidclient && npx cap open android
 ```
 
 ---

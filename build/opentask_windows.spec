@@ -14,7 +14,7 @@ a = Analysis(
     pathex=['.'],
     binaries=[],
     datas=[
-        ('opentask/webclient', 'webclient'),
+        ('crossed-viper/webclient', 'webclient'),
     ],
     hiddenimports=[],
     hookspath=[],
@@ -34,13 +34,13 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='OpenTask',
+    name='CrossedViper',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     console=False,          # no console window in production
-    icon='opentask/webclient/icon.ico',
+    icon='crossed-viper/webclient/icon.ico',
 )
 
 coll = COLLECT(
@@ -51,5 +51,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='OpenTask',
+    name='CrossedViper',
 )

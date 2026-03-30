@@ -1,6 +1,6 @@
 {
-  "name": "OpenTask",
-  "short_name": "OpenTask",
+  "name": "Crossed Viper",
+  "short_name": "CrossedViper",
   "description": "Task management app",
   "icons": [
     { "src": "icon-256.png", "sizes": "256x256", "type": "image/png" },

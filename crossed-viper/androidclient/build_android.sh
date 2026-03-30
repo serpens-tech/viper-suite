@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build OpenBudget Android APK using Capacitor.
+# Build Crossed Viper Android APK using Capacitor.
 #
 # Requirements:
 #   - Node.js 18+  (https://nodejs.org)
@@ -10,12 +10,13 @@
 #       export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
 #
 # Run from the project root:
-#   bash openbudget/androidclient/build_android_budget.sh
+#   bash crossed-viper/androidclient/build_android.sh
 
 set -euo pipefail
 
+# Always run from project root regardless of where the script is invoked from
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd ../.. && pwd)"
-cd "$ROOT/openbudget/androidclient"
+cd "$ROOT/crossed-viper/androidclient"
 
 echo "==> Installing Node dependencies..."
 npm install
@@ -37,10 +38,10 @@ cd android
 APK="app/build/outputs/apk/debug/app-debug.apk"
 echo ""
 echo "Done!"
-echo "APK: openbudget/androidclient/android/${APK}"
+echo "APK: crossed-viper/androidclient/android/${APK}"
 echo ""
 echo "Install on a connected device:"
-echo "  adb install openbudget/androidclient/android/${APK}"
+echo "  adb install crossed-viper/androidclient/android/${APK}"
 echo ""
 echo "Or open the project in Android Studio:"
-echo "  cd openbudget/androidclient && npx cap open android"
+echo "  cd crossed-viper/androidclient && npx cap open android"

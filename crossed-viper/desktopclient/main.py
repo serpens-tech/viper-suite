@@ -1,10 +1,10 @@
-"""OpenBudget — Desktop Client (PyWebView)
+"""Crossed Viper — Desktop Client (PyWebView)
 
-Serves the openbudget/webclient/ folder locally and opens it in a native window.
-On first launch the app will auto-connect to the local server.
+Serves the crossed-viper/webclient/ folder locally and opens it in a native window.
+On first launch the app will ask for the server URL.
 
 Run from the project root:
-    .venv/bin/python openbudget/desktopclient/main.py
+    .venv/bin/python crossed-viper/desktopclient/main.py
 """
 
 import os
@@ -21,8 +21,8 @@ if getattr(sys, "frozen", False):
 else:
     _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
-WEBCLIENT = os.path.join(_ROOT, "openbudget", "webclient")
-PORT_WEB  = 5502
+WEBCLIENT = os.path.join(_ROOT, "crossed-viper", "webclient")
+PORT_WEB  = 5501
 
 # ── Static file server ────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ def main():
     gui = "gtk" if sys.platform.startswith("linux") else None
 
     webview.create_window(
-        title    = "OpenBudget",
+        title    = "Crossed Viper",
         url      = f"http://127.0.0.1:{PORT_WEB}/index.html",
         width    = 1200,
         height   = 740,

@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://opentask:opentask@localhost:5432/opentask")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://vipersuite:vipersuite@localhost:5432/vipersuite")
 
 # connect_args only needed for SQLite
 _connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}

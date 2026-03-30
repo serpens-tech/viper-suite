@@ -1,23 +1,23 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: opentask_db
+    container_name: viper_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: opentask
-      POSTGRES_USER: opentask
-      POSTGRES_PASSWORD: opentask
+      POSTGRES_DB: vipersuite
+      POSTGRES_USER: vipersuite
+      POSTGRES_PASSWORD: vipersuite
     volumes:
-      - opentask_db:/var/lib/postgresql/data
+      - viper_db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U opentask"]
+      test: ["CMD-SHELL", "pg_isready -U vipersuite"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  opentask:
+  viper_suite:
     build: .
-    container_name: opentask
+    container_name: viper_suite
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -27,8 +27,11 @@ services:
     environment:
       # Change this secret in production!
       SECRET_KEY: change-me-in-production-use-a-long-random-string
-      DATABASE_URL: postgresql://opentask:opentask@db:5432/opentask
+      DATABASE_URL: postgresql://vipersuite:vipersuite@db:5432/vipersuite
       ACCESS_TOKEN_EXPIRE_MINUTES: 43200
+      # Set this to your server address so the web client skips the server setup screen.
+      # Example: CROSSED_VIPER_SERVER: https://crossedviper.example.com
+      CROSSED_VIPER_SERVER: ""
 
 volumes:
-  opentask_db:
+  viper_db:

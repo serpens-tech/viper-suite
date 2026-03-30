@@ -1,6 +1,6 @@
 {
-  "appId": "com.opentask.app",
-  "appName": "OpenTask",
+  "appId": "com.leafviper.app",
+  "appName": "Leaf Viper",
   "webDir": "../webclient",
   "server": {
     "androidScheme": "https",
