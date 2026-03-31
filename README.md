@@ -66,8 +66,8 @@ cd viper-suite
 docker compose up -d
 
 # 3. Open the web UIs
-# Crossed Viper: http://localhost:8000/tasks/
-# Leaf Viper:    http://localhost:8000/budget/
+# Crossed Viper: http://localhost:8000/crossed-viper/
+# Leaf Viper:    http://localhost:8000/leaf-viper/
 ```
 
 A default admin account is created automatically on first run:
@@ -108,6 +108,7 @@ Environment variables are set in `docker-compose.yml`. The most important ones:
 | `SECRET_KEY` | `change-me-in-production-...` | Secret used to sign JWT tokens. **Must be changed in production.** |
 | `DATABASE_URL` | `postgresql://vipersuite:vipersuite@db:5432/vipersuite` | PostgreSQL connection string |
 | `CROSSED_VIPER_SERVER` | *(empty)* | If set, the web client skips the server setup screen on first load |
+| `SHOW_CHANGE_SERVER` | `true` | If `false`, hides the "Change server" button on login/app screens |
 
 Generate a secure key with:
 
@@ -120,6 +121,14 @@ Then update `docker-compose.yml`:
 ```yaml
 environment:
   SECRET_KEY: <your-generated-key>
+```
+
+You can also use a `.env` file (auto-loaded by Docker Compose):
+
+```env
+SECRET_KEY=replace-with-a-long-random-value
+CROSSED_VIPER_SERVER=https://crossedviper.example.com
+SHOW_CHANGE_SERVER=false
 ```
 
 ---
@@ -156,8 +165,8 @@ docker compose up -d db
 uvicorn app.main:app --reload
 ```
 
-- Crossed Viper web UI: http://localhost:8000/tasks/
-- Leaf Viper web UI:    http://localhost:8000/budget/
+- Crossed Viper web UI: http://localhost:8000/crossed-viper/
+- Leaf Viper web UI:    http://localhost:8000/leaf-viper/
 
 ### Project structure
 

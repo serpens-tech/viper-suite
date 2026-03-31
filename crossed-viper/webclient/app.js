@@ -4,12 +4,38 @@
 const API = (localStorage.getItem('ot_server') || 'http://localhost:8000').replace(/\/$/, '');
 
 // Capacitor (Android) serves files from https://localhost — detect it so that
-// internal redirects use relative paths instead of /tasks/…
-const _CAP      = typeof window.Capacitor !== 'undefined' ||
-                  window.location.origin === 'https://localhost' ||
-                  window.location.origin === 'capacitor://localhost';
-const PATH_INDEX = _CAP ? 'index.html' : '/tasks/';
-const PATH_APP   = _CAP ? 'app.html'   : '/tasks/app.html';
+// internal redirects use relative paths instead of /crossed-viper/…
+const _CAP      = globalThis.Capacitor !== undefined ||
+                  globalThis.location.origin === 'https://localhost' ||
+                  globalThis.location.origin === 'capacitor://localhost';
+const PATH_INDEX = _CAP ? 'index.html' : '/crossed-viper/';
+const SHOW_CHANGE_SERVER =
+  globalThis._SHOW_CHANGE_SERVER !== false &&
+  localStorage.getItem('ot_show_change_server') !== '0';
+const BUDGET_APP_URL = _CAP ? `${API}/leaf-viper/` : '/leaf-viper/';
+const LEAF_VIPER_PACKAGE = 'com.leafviper.app';
+
+async function switchAppTarget(target, androidPackage, fallbackUrl) {
+  const launcher = globalThis.Capacitor?.Plugins?.AppLauncher;
+  if (_CAP && launcher && typeof launcher.canOpenUrl === 'function' && typeof launcher.openUrl === 'function') {
+    try {
+      const canOpen = await launcher.canOpenUrl({ url: androidPackage });
+      if (canOpen?.value) {
+        await launcher.openUrl({ url: androidPackage });
+        return;
+      }
+    } catch {}
+  }
+
+  const desktopApi = globalThis.pywebview?.api;
+  if (desktopApi && typeof desktopApi.switch_app === 'function') {
+    try {
+      const opened = await desktopApi.switch_app(target);
+      if (opened) return;
+    } catch {}
+  }
+  globalThis.location.href = fallbackUrl;
+}
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let token       = localStorage.getItem('ot_token') || null;
@@ -19,7 +45,7 @@ let selectedList = null;
 let selectedUserId = null;   // admin panel
 
 // ── Auth guard ─────────────────────────────────────────────────────────────────
-if (!token) { window.location.href = PATH_INDEX; }
+if (!token) { globalThis.location.href = PATH_INDEX; }
 
 // ── API helpers ───────────────────────────────────────────────────────────────
 
@@ -41,7 +67,7 @@ async function apiFetch(method, path, body = null) {
 
   if (res.status === 401) {
     localStorage.removeItem('ot_token');
-    window.location.href = PATH_INDEX;
+    globalThis.location.href = PATH_INDEX;
     return;
   }
 
@@ -62,6 +88,8 @@ async function apiFetch(method, path, body = null) {
 
 const api = {
   me:           ()             => apiFetch('GET',    '/auth/me'),
+  updateMe:     body          => apiFetch('PATCH',  '/users/me', body),
+  deleteMe:     ()            => apiFetch('DELETE', '/users/me'),
   // lists
   getLists:     ()             => apiFetch('GET',    '/lists'),
   createList:   body          => apiFetch('POST',   '/lists', body),
@@ -104,6 +132,13 @@ const topbarUser   = document.getElementById('topbar-user');
 const btnAdmin     = document.getElementById('btn-admin');
 const btnAdminSidebar  = document.getElementById('btn-admin-sidebar');
 const sidebarUsername  = document.getElementById('sidebar-username');
+
+function refreshUserLabel() {
+  if (!currentUser) return;
+  const label = currentUser.is_admin ? `★ ${currentUser.username}` : currentUser.username;
+  topbarUser.textContent = label;
+  sidebarUsername.textContent = label;
+}
 
 // ── Mobile sidebar toggle ─────────────────────────────────────────────────────
 function openSidebar()  { document.body.classList.add('sidebar-open'); }
@@ -148,9 +183,7 @@ document.getElementById('sidebar-backdrop').addEventListener('click', closeSideb
 (async () => {
   try {
     currentUser = await api.me();
-    const label = currentUser.is_admin ? `★ ${currentUser.username}` : currentUser.username;
-    topbarUser.textContent = label;
-    sidebarUsername.textContent = label;
+    refreshUserLabel();
     if (currentUser.is_admin) {
       btnAdmin.classList.remove('hidden');
       btnAdminSidebar.classList.remove('hidden');
@@ -160,6 +193,86 @@ document.getElementById('sidebar-backdrop').addEventListener('click', closeSideb
     toast(e.message, true);
   }
 })();
+
+// ── App switch ───────────────────────────────────────────────────────────────
+document.getElementById('btn-switch-app').addEventListener('click', () => {
+  switchAppTarget('leaf-viper', LEAF_VIPER_PACKAGE, BUDGET_APP_URL);
+});
+document.getElementById('btn-switch-app-sidebar').addEventListener('click', () => {
+  closeSidebar();
+  switchAppTarget('leaf-viper', LEAF_VIPER_PACKAGE, BUDGET_APP_URL);
+});
+
+// ── My account ───────────────────────────────────────────────────────────────
+document.getElementById('btn-account').addEventListener('click', openAccountModal);
+document.getElementById('btn-account-sidebar').addEventListener('click', () => {
+  closeSidebar();
+  openAccountModal();
+});
+
+document.getElementById('account-close').addEventListener('click', closeAccountModal);
+document.getElementById('account-cancel').addEventListener('click', closeAccountModal);
+
+function openAccountModal() {
+  if (!currentUser) { toast('Loading user info, please try again.', true); return; }
+  document.getElementById('acc-username').value = currentUser.username;
+  document.getElementById('acc-password').value = '';
+  document.getElementById('account-error').classList.add('hidden');
+  document.getElementById('modal-account').classList.remove('hidden');
+  document.getElementById('acc-username').focus();
+}
+
+function closeAccountModal() {
+  document.getElementById('modal-account').classList.add('hidden');
+}
+
+document.getElementById('account-save').addEventListener('click', async () => {
+  const errEl = document.getElementById('account-error');
+  const saveBtn = document.getElementById('account-save');
+  errEl.classList.add('hidden');
+
+  const username = document.getElementById('acc-username').value.trim();
+  const password = document.getElementById('acc-password').value;
+  if (!username) {
+    errEl.textContent = 'Username is required.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const body = {};
+  if (username !== currentUser.username) body.username = username;
+  if (password) body.password = password;
+  if (Object.keys(body).length === 0) {
+    closeAccountModal();
+    return;
+  }
+
+  saveBtn.disabled = true;
+  try {
+    currentUser = await api.updateMe(body);
+    refreshUserLabel();
+    closeAccountModal();
+    toast('Account updated');
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    saveBtn.disabled = false;
+  }
+});
+
+document.getElementById('btn-delete-account').addEventListener('click', async () => {
+  if (!confirm('Delete your account permanently?')) return;
+  try {
+    await api.deleteMe();
+    localStorage.removeItem('ot_token');
+    globalThis.location.href = PATH_INDEX;
+  } catch (e) {
+    const errEl = document.getElementById('account-error');
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  }
+});
 
 // ── Lists ─────────────────────────────────────────────────────────────────────
 async function loadLists() {
@@ -253,12 +366,12 @@ function renderTasks(tasks) {
         ${task.description
           ? `<div class="task-desc">${escHtml(task.description)}</div>` : ''}
         ${(task.finance_type && task.finance_amount != null)
-          ? `<div style="margin-top:4px"><span class="badge ${task.finance_type === 'income' ? 'badge-income' : 'badge-expense'}">${task.finance_type === 'income' ? '💰 +' : '💸 -'}${parseFloat(task.finance_amount).toFixed(2)}</span></div>`
+          ? `<div style="margin-top:4px"><span class="badge ${task.finance_type === 'income' ? 'badge-income' : 'badge-expense'}">${task.finance_type === 'income' ? '💰 +' : '💸 -'}${Number.parseFloat(task.finance_amount).toFixed(2)}</span></div>`
           : ''}
       </div>
       <div class="task-btns">
-        <button class="btn btn-ghost btn-sm btn-edit-task">Edit</button>
-        <button class="btn btn-danger btn-sm btn-del-task">Delete</button>
+        <button class="icon-only-btn btn-edit-task" title="Edit task" aria-label="Edit task">✏️</button>
+        <button class="icon-only-btn btn-del-task" title="Delete task" aria-label="Delete task">🗑️</button>
       </div>`;
 
     li.querySelector('.task-check').addEventListener('change', async () => {
@@ -278,13 +391,13 @@ function renderTasks(tasks) {
             { value: 'income',  label: '💰 Income (adds to balance)' },
             { value: 'expense', label: '💸 Expense (subtracts from balance)' },
           ]},
-        { label: 'Amount',        key: 'finance_amount', type: 'number',   required: false, value: task.finance_amount != null ? task.finance_amount : '' },
+        { label: 'Amount',        key: 'finance_amount', type: 'number',   required: false, value: task.finance_amount == null ? '' : task.finance_amount },
       ], async data => {
         await api.updateTask(selectedList.id, task.id, {
           title:          data.title       || undefined,
           description:    data.description || undefined,
           finance_type:   data.finance_type   || null,
-          finance_amount: data.finance_amount ? parseFloat(data.finance_amount) : null,
+          finance_amount: data.finance_amount ? Number.parseFloat(data.finance_amount) : null,
         });
         await loadTasks();
         toast('Task updated');
@@ -321,7 +434,7 @@ document.getElementById('btn-new-task').addEventListener('click', () => {
       title:          data.title,
       description:    data.description    || null,
       finance_type:   data.finance_type   || null,
-      finance_amount: data.finance_amount ? parseFloat(data.finance_amount) : null,
+      finance_amount: data.finance_amount ? Number.parseFloat(data.finance_amount) : null,
     });
     await loadTasks();
     toast('Task created');
@@ -566,35 +679,39 @@ function openUserForm(existing) {
 // ── Logout ─────────────────────────────────────────────────────────────────────
 document.getElementById('btn-logout').addEventListener('click', () => {
   localStorage.removeItem('ot_token');
-  window.location.href = PATH_INDEX;
+  globalThis.location.href = PATH_INDEX;
 });
 document.getElementById('btn-logout-sidebar').addEventListener('click', () => {
   localStorage.removeItem('ot_token');
-  window.location.href = PATH_INDEX;
+  globalThis.location.href = PATH_INDEX;
 });
 
 // ── Change server ──────────────────────────────────────────────────────────────
 function changeServer() {
   localStorage.removeItem('ot_token');
   localStorage.removeItem('ot_server');
-  window.location.href = PATH_INDEX;
+  globalThis.location.href = PATH_INDEX;
 }
 document.getElementById('btn-server').addEventListener('click', changeServer);
 document.getElementById('btn-server-sidebar').addEventListener('click', changeServer);
+if (!SHOW_CHANGE_SERVER) {
+  document.getElementById('btn-server').classList.add('hidden');
+  document.getElementById('btn-server-sidebar').classList.add('hidden');
+}
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
 (function() {
   function syncBtns() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const isDark = document.documentElement.dataset.theme === 'dark';
     const t = document.getElementById('btn-theme');
     const s = document.getElementById('btn-theme-sidebar');
     if (t) t.textContent = isDark ? '☀️' : '🌙';
     if (s) s.textContent = isDark ? '☀️ Light mode' : '🌙 Dark mode';
   }
   function toggle() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const isDark = document.documentElement.dataset.theme === 'dark';
     const next = isDark ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
+    document.documentElement.dataset.theme = next;
     localStorage.setItem('ot_theme', next);
     syncBtns();
   }
@@ -606,9 +723,9 @@ document.getElementById('btn-server-sidebar').addEventListener('click', changeSe
 // ── Utility ───────────────────────────────────────────────────────────────────
 function escHtml(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }

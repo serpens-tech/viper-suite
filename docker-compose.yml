@@ -17,6 +17,7 @@ services:
 
   viper_suite:
     build: .
+    image: viper-suite:latest
     container_name: viper_suite
     restart: unless-stopped
     ports:
@@ -31,7 +32,9 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: 43200
       # Set this to your server address so the web client skips the server setup screen.
       # Example: CROSSED_VIPER_SERVER: https://crossedviper.example.com
-      CROSSED_VIPER_SERVER: ""
+      CROSSED_VIPER_SERVER: "${CROSSED_VIPER_SERVER:-}"
+      # If false, hides "Change server" buttons on login/app screens.
+      SHOW_CHANGE_SERVER: "${SHOW_CHANGE_SERVER:-true}"
 
 volumes:
   viper_db:

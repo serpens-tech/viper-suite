@@ -8,8 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/
-COPY opentask/webclient/ ./opentask/webclient/
-COPY openbudget/webclient/ ./openbudget/webclient/
+COPY crossed-viper/webclient/ ./crossed-viper/webclient/
+COPY leaf-viper/webclient/ ./leaf-viper/webclient/
 
 EXPOSE 8000
 

@@ -4,13 +4,33 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app.auth import create_access_token, verify_password
+from app.auth import create_access_token, hash_password, verify_password
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User
-from app.schemas import Token, UserOut
+from app.schemas import Token, UserOut, UserRegister
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+def register_user(
+    body: UserRegister,
+    db: Annotated[Session, Depends(get_db)],
+):
+    existing = db.query(User).filter(User.username == body.username).first()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already taken")
+
+    user = User(
+        username=body.username,
+        password_hash=hash_password(body.password),
+        is_admin=False,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 @router.post("/login", response_model=Token)

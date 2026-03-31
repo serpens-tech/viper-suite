@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Crossed Viper</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css?v=20260330-2" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260330-icons-1" />
+  <link rel="manifest" href="manifest.json?v=20260330-icons-1" />
   <script>(function(){var s=localStorage.getItem('ot_theme'),d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(s===null&&d))document.documentElement.setAttribute('data-theme','dark');else if(s==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
 </head>
 <body class="app-body">
@@ -17,15 +17,17 @@
       <button id="btn-hamburger" class="btn-hamburger" aria-label="Toggle menu">
         <span></span><span></span><span></span>
       </button>
-      <img src="favicon.svg" width="26" height="26" style="border-radius:7px;display:block" alt="Crossed Viper" />
+      <img src="favicon.svg?v=20260330-icons-1" width="26" height="26" style="border-radius:7px;display:block" alt="Crossed Viper" />
       <span class="topbar-brand">Crossed Viper</span>
     </div>
     <div class="topbar-right">
       <span id="topbar-user" class="topbar-username"></span>
-      <button id="btn-theme" class="btn-theme" title="Toggle dark mode">🌙</button>
-      <button id="btn-admin" class="btn btn-ghost btn-sm hidden">Admin Panel</button>
-      <button id="btn-server" class="btn btn-ghost btn-sm" title="Change server">⚙</button>
-      <button id="btn-logout" class="btn btn-danger btn-sm">Logout</button>
+      <button id="btn-theme" type="button" class="btn-theme" title="Toggle dark mode">🌙</button>
+      <button id="btn-switch-app" type="button" class="icon-only-btn" title="Go to Leaf Viper" aria-label="Go to Leaf Viper"><img src="/leaf-viper/icon-256.png?v=20260330-icons-1" style="pointer-events:none" alt=""></button>
+      <button id="btn-admin" type="button" class="btn btn-ghost btn-sm hidden">Admin Panel</button>
+      <button id="btn-account" type="button" class="icon-only-btn" title="My account" aria-label="My account">👤</button>
+      <button id="btn-server" type="button" class="btn btn-ghost btn-sm" title="Change server">⚙</button>
+      <button id="btn-logout" type="button" class="icon-only-btn" title="Logout" aria-label="Logout">🚪</button>
     </div>
   </header>
 
@@ -37,7 +39,7 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <span class="sidebar-title">MY LISTS</span>
-        <button id="btn-new-list" class="btn btn-icon" title="New list">＋</button>
+        <button id="btn-new-list" type="button" class="btn btn-icon" title="New list">＋</button>
       </div>
       <ul id="lists-ul" class="lists-ul"></ul>
 
@@ -46,10 +48,12 @@
         <div class="sidebar-footer-user">
           <span id="sidebar-username" class="sidebar-footer-name"></span>
         </div>
-        <button id="btn-admin-sidebar" class="btn btn-ghost btn-sm btn-full hidden">&#9733; Admin Panel</button>
-        <button id="btn-theme-sidebar" class="btn btn-ghost btn-sm btn-full">🌙 Dark mode</button>
-        <button id="btn-server-sidebar" class="btn btn-ghost btn-sm btn-full">&#9881; Change Server</button>
-        <button id="btn-logout-sidebar" class="btn btn-danger btn-sm btn-full">Logout</button>
+        <button id="btn-admin-sidebar" type="button" class="btn btn-ghost btn-sm btn-full hidden">&#9733; Admin Panel</button>
+        <button id="btn-theme-sidebar" type="button" class="btn btn-ghost btn-sm btn-full">🌙 Dark mode</button>
+        <button id="btn-account-sidebar" type="button" class="icon-only-btn" title="My account" aria-label="My account">👤</button>
+        <button id="btn-switch-app-sidebar" type="button" class="icon-only-btn" title="Go to Leaf Viper" aria-label="Go to Leaf Viper"><img src="/leaf-viper/icon-256.png?v=20260330-icons-1" style="pointer-events:none" alt=""></button>
+        <button id="btn-server-sidebar" type="button" class="btn btn-ghost btn-sm btn-full">&#9881; Change Server</button>
+        <button id="btn-logout-sidebar" type="button" class="icon-only-btn" title="Logout" aria-label="Logout">🚪</button>
       </div>
     </aside>
 
@@ -58,9 +62,9 @@
       <div class="panel-header">
         <h2 id="tasks-heading" class="tasks-heading">← Select a list</h2>
         <div id="task-actions" class="task-actions hidden">
-          <button id="btn-new-task"    class="btn btn-primary btn-sm">+ New Task</button>
-          <button id="btn-edit-list"   class="btn btn-ghost  btn-sm">Edit List</button>
-          <button id="btn-delete-list" class="btn btn-danger btn-sm">Delete List</button>
+          <button id="btn-new-task" type="button" class="btn btn-primary btn-sm">+ New Task</button>
+          <button id="btn-edit-list" type="button" class="icon-only-btn" title="Edit list" aria-label="Edit list">✏️</button>
+          <button id="btn-delete-list" type="button" class="icon-only-btn" title="Delete list" aria-label="Delete list">🗑️</button>
         </div>
       </div>
 
@@ -79,8 +83,8 @@
       <div id="modal-fields"></div>
       <p id="modal-error" class="error-msg hidden"></p>
       <div class="modal-footer">
-        <button id="modal-cancel" class="btn btn-ghost">Cancel</button>
-        <button id="modal-save"   class="btn btn-primary">Save</button>
+        <button id="modal-cancel" type="button" class="btn btn-ghost">Cancel</button>
+        <button id="modal-save" type="button" class="btn btn-primary">Save</button>
       </div>
     </div>
   </div>
@@ -90,12 +94,12 @@
     <div class="modal-card modal-wide">
       <div class="modal-head-row">
         <h3 class="modal-heading">Admin Panel — Users</h3>
-        <button id="admin-close" class="btn-close" aria-label="Close">✕</button>
+        <button id="admin-close" type="button" class="btn-close" aria-label="Close">✕</button>
       </div>
       <div class="admin-toolbar">
-        <button id="btn-new-user"    class="btn btn-primary btn-sm">+ New User</button>
-        <button id="btn-edit-user"   class="btn btn-ghost   btn-sm">Edit</button>
-        <button id="btn-delete-user" class="btn btn-danger  btn-sm">Delete</button>
+        <button id="btn-new-user" type="button" class="btn btn-primary btn-sm">+ New User</button>
+        <button id="btn-edit-user" type="button" class="icon-only-btn" title="Edit user" aria-label="Edit user">✏️</button>
+        <button id="btn-delete-user" type="button" class="icon-only-btn" title="Delete user" aria-label="Delete user">🗑️</button>
       </div>
       <table class="users-table">
         <thead>
@@ -127,8 +131,8 @@
       </div>
       <p id="user-form-error" class="error-msg hidden"></p>
       <div class="modal-footer">
-        <button id="user-form-cancel" class="btn btn-ghost">Cancel</button>
-        <button id="user-form-save"   class="btn btn-primary">Save</button>
+        <button id="user-form-cancel" type="button" class="btn btn-ghost">Cancel</button>
+        <button id="user-form-save" type="button" class="btn btn-primary">Save</button>
       </div>
     </div>
   </div>
@@ -136,6 +140,32 @@
   <!-- Toast notification -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="app.js"></script>
+  <!-- My Account modal -->
+  <div id="modal-account" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head-row">
+        <h3 class="modal-heading">My Account</h3>
+        <button id="account-close" type="button" class="btn-close" aria-label="Close">✕</button>
+      </div>
+      <div class="field">
+        <label for="acc-username">Username *</label>
+        <input id="acc-username" type="text" />
+      </div>
+      <div class="field">
+        <label for="acc-password">New Password <span style="font-weight:400;color:#9ca3af">(blank = keep current)</span></label>
+        <input id="acc-password" type="password" />
+      </div>
+      <p id="account-error" class="error-msg hidden"></p>
+      <div class="modal-footer" style="justify-content:space-between">
+        <button id="btn-delete-account" type="button" class="icon-only-btn" title="Delete account" aria-label="Delete account">🗑️</button>
+        <div style="display:flex;gap:8px">
+          <button id="account-cancel" type="button" class="btn btn-ghost">Cancel</button>
+          <button id="account-save" type="button" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=20260330-2"></script>
 </body>
 </html>

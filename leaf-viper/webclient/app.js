@@ -1,15 +1,41 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const API = (localStorage.getItem('ob_server') || window.location.origin).replace(/\/$/, '');
+const API = (localStorage.getItem('ob_server') || globalThis.location.origin).replace(/\/$/, '');
 
 // Capacitor (Android) serves files from https://localhost — detect it so that
-// internal redirects use relative paths instead of /budget/…
-const _CAP       = typeof window.Capacitor !== 'undefined' ||
-                   window.location.origin === 'https://localhost' ||
-                   window.location.origin === 'capacitor://localhost';
-const PATH_INDEX  = _CAP ? 'index.html' : '/budget/';
-const PATH_APP    = _CAP ? 'app.html'   : '/budget/app.html';
+// internal redirects use relative paths instead of /leaf-viper/…
+const _CAP       = globalThis.Capacitor !== undefined ||
+                   globalThis.location.origin === 'https://localhost' ||
+                   globalThis.location.origin === 'capacitor://localhost';
+const PATH_INDEX  = _CAP ? 'index.html' : '/leaf-viper/';
+const SHOW_CHANGE_SERVER =
+  globalThis._SHOW_CHANGE_SERVER !== false &&
+  localStorage.getItem('ob_show_change_server') !== '0';
+const TASKS_APP_URL = _CAP ? `${API}/crossed-viper/` : '/crossed-viper/';
+const CROSSED_VIPER_PACKAGE = 'com.crossedviper.app';
+
+async function switchAppTarget(target, androidPackage, fallbackUrl) {
+  const launcher = globalThis.Capacitor?.Plugins?.AppLauncher;
+  if (_CAP && launcher && typeof launcher.canOpenUrl === 'function' && typeof launcher.openUrl === 'function') {
+    try {
+      const canOpen = await launcher.canOpenUrl({ url: androidPackage });
+      if (canOpen?.value) {
+        await launcher.openUrl({ url: androidPackage });
+        return;
+      }
+    } catch {}
+  }
+
+  const desktopApi = globalThis.pywebview?.api;
+  if (desktopApi && typeof desktopApi.switch_app === 'function') {
+    try {
+      const opened = await desktopApi.switch_app(target);
+      if (opened) return;
+    } catch {}
+  }
+  globalThis.location.href = fallbackUrl;
+}
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let token          = localStorage.getItem('ob_token') || null;
@@ -20,15 +46,15 @@ let summary        = null;
 let selectedUserId = null;
 
 // ── Auth guard ─────────────────────────────────────────────────────────────────
-if (!token) { window.location.href = PATH_INDEX; }
+if (!token) { globalThis.location.href = PATH_INDEX; }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function escHtml(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 }
 
 const MONTHS = [
@@ -67,7 +93,7 @@ async function apiFetch(method, path, body = null) {
 
   if (res.status === 401) {
     localStorage.removeItem('ob_token');
-    window.location.href = PATH_INDEX;
+    globalThis.location.href = PATH_INDEX;
     return;
   }
 
@@ -88,6 +114,8 @@ async function apiFetch(method, path, body = null) {
 
 const api = {
   me:             ()           => apiFetch('GET',    '/auth/me'),
+  updateMe:       body         => apiFetch('PATCH',  '/users/me', body),
+  deleteMe:       ()           => apiFetch('DELETE', '/users/me'),
   getSummary:     ()           => apiFetch('GET',    '/finance/summary'),
   getIncomes:     ()           => apiFetch('GET',    '/finance/incomes'),
   createIncome:   body         => apiFetch('POST',   '/finance/incomes', body),
@@ -117,6 +145,12 @@ function toast(msg, isError = false) {
     el.classList.remove('show');
     setTimeout(() => el.classList.add('hidden'), 280);
   }, 2800);
+}
+
+function refreshUserLabel() {
+  if (!currentUser) return;
+  const label = currentUser.is_admin ? `★ ${currentUser.username}` : currentUser.username;
+  document.getElementById('topbar-user').textContent = label;
 }
 
 // ── Load all data ─────────────────────────────────────────────────────────────
@@ -152,14 +186,14 @@ function rebuildMonthFilter() {
     const [y, m] = e.date.split('-');
     keys.add(`${y}-${m}`);
   });
-  const sorted = [...keys].sort().reverse();
+  const sorted = [...keys].sort((a, b) => b.localeCompare(a));
 
   sel.innerHTML = '<option value="">All months</option>';
   sorted.forEach(k => {
     const [y, m] = k.split('-');
     const opt = document.createElement('option');
     opt.value = k;
-    opt.textContent = fmtMonth(parseInt(y), parseInt(m));
+    opt.textContent = fmtMonth(Number.parseInt(y, 10), Number.parseInt(m, 10));
     sel.appendChild(opt);
   });
 
@@ -208,8 +242,8 @@ function renderEntries(ulId, emptyId, entries, type) {
       <div class="entry-right">
         <span class="entry-amount ${type}-amt">${fmtAmt(entry.amount)}</span>
         <div class="entry-btns">
-          <button class="btn btn-ghost btn-sm btn-edit">Edit</button>
-          <button class="btn btn-danger btn-sm btn-delete">Delete</button>
+          <button class="icon-only-btn btn-edit" title="Edit entry" aria-label="Edit entry">✏️</button>
+          <button class="icon-only-btn btn-delete" title="Delete entry" aria-label="Delete entry">🗑️</button>
         </div>
       </div>`;
 
@@ -236,7 +270,7 @@ function renderMonthlyTable() {
   let running = 0;
   sorted.forEach(m => { running += m.net; m.cumulative = running; });
   // Display newest first
-  sorted.reverse().forEach(m => {
+  [...sorted].reverse().forEach(m => {
     const netCls = m.net >= 0 ? 'td-net-pos' : 'td-net-neg';
     const balCls = m.cumulative >= 0 ? 'td-net-pos' : 'td-net-neg';
     const tr = document.createElement('tr');
@@ -280,7 +314,7 @@ function openFormModal(title, entry, type) {
   const fields = [
     { key: 'name',        label: 'Name *',        type: 'text',     required: true,  value: entry?.name        || '' },
     { key: 'description', label: 'Description',   type: 'textarea', required: false, value: entry?.description || '' },
-    { key: 'amount',      label: 'Amount *',      type: 'number',   required: true,  value: entry?.amount != null ? String(entry.amount) : '' },
+    { key: 'amount',      label: 'Amount *',      type: 'number',   required: true,  value: entry?.amount == null ? '' : String(entry.amount) },
     { key: 'date',        label: 'Date *',        type: 'date',     required: true,  value: entry?.date        || today() },
   ];
 
@@ -340,10 +374,10 @@ function openFormModal(title, entry, type) {
     const body = {
       name:        data.name,
       description: data.description || null,
-      amount:      parseFloat(data.amount),
+      amount:      Number.parseFloat(data.amount),
       date:        data.date,
     };
-    if (isNaN(body.amount) || body.amount <= 0) {
+    if (Number.isNaN(body.amount) || body.amount <= 0) {
       errEl.textContent = 'Amount must be a positive number.';
       errEl.classList.remove('hidden');
       refs['amount'].el.focus();
@@ -527,29 +561,101 @@ function openUserForm(existing) {
 }
 
 // ── Logout / Change server ────────────────────────────────────────────────────
+document.getElementById('btn-switch-app').addEventListener('click', () => {
+  switchAppTarget('crossed-viper', CROSSED_VIPER_PACKAGE, TASKS_APP_URL);
+});
+
+document.getElementById('btn-account').addEventListener('click', openAccountModal);
+document.getElementById('account-close').addEventListener('click', closeAccountModal);
+document.getElementById('account-cancel').addEventListener('click', closeAccountModal);
+
+function openAccountModal() {
+  if (!currentUser) return;
+  document.getElementById('acc-username').value = currentUser.username;
+  document.getElementById('acc-password').value = '';
+  document.getElementById('account-error').classList.add('hidden');
+  document.getElementById('modal-account').classList.remove('hidden');
+  document.getElementById('acc-username').focus();
+}
+
+function closeAccountModal() {
+  document.getElementById('modal-account').classList.add('hidden');
+}
+
+document.getElementById('account-save').addEventListener('click', async () => {
+  const errEl = document.getElementById('account-error');
+  const saveBtn = document.getElementById('account-save');
+  errEl.classList.add('hidden');
+
+  const username = document.getElementById('acc-username').value.trim();
+  const password = document.getElementById('acc-password').value;
+  if (!username) {
+    errEl.textContent = 'Username is required.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const body = {};
+  if (username !== currentUser.username) body.username = username;
+  if (password) body.password = password;
+  if (Object.keys(body).length === 0) {
+    closeAccountModal();
+    return;
+  }
+
+  saveBtn.disabled = true;
+  try {
+    currentUser = await api.updateMe(body);
+    refreshUserLabel();
+    closeAccountModal();
+    toast('Account updated');
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    saveBtn.disabled = false;
+  }
+});
+
+document.getElementById('btn-delete-account').addEventListener('click', async () => {
+  if (!confirm('Delete your account permanently?')) return;
+  try {
+    await api.deleteMe();
+    localStorage.removeItem('ob_token');
+    globalThis.location.href = PATH_INDEX;
+  } catch (e) {
+    const errEl = document.getElementById('account-error');
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  }
+});
+
 document.getElementById('btn-logout').addEventListener('click', () => {
   localStorage.removeItem('ob_token');
-  window.location.href = PATH_INDEX;
+  globalThis.location.href = PATH_INDEX;
 });
 document.getElementById('btn-server').addEventListener('click', () => {
   const url = prompt('Server URL:', localStorage.getItem('ob_server') || '');
   if (url !== null) {
     localStorage.setItem('ob_server', url.trim().replace(/\/$/, ''));
-    window.location.reload();
+    globalThis.location.reload();
   }
 });
+if (!SHOW_CHANGE_SERVER) {
+  document.getElementById('btn-server').classList.add('hidden');
+}
 
 // ── Theme toggle ──────────────────────────────────────────────────────────────
 (function() {
   function syncBtn() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const isDark = document.documentElement.dataset.theme === 'dark';
     const t = document.getElementById('btn-theme');
     if (t) t.textContent = isDark ? '☀️' : '🌙';
   }
   document.getElementById('btn-theme').addEventListener('click', () => {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const isDark = document.documentElement.dataset.theme === 'dark';
     const next = isDark ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
+    document.documentElement.dataset.theme = next;
     localStorage.setItem('ob_theme', next);
     syncBtn();
   });
@@ -560,8 +666,7 @@ document.getElementById('btn-server').addEventListener('click', () => {
 (async () => {
   try {
     currentUser = await api.me();
-    document.getElementById('topbar-user').textContent =
-      currentUser.is_admin ? `★ ${currentUser.username}` : currentUser.username;
+    refreshUserLabel();
     if (currentUser.is_admin) {
       document.getElementById('btn-admin').classList.remove('hidden');
     }

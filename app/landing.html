@@ -4,125 +4,441 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Viper Suite</title>
+  <link rel="icon" type="image/png" href="/icon-256.png?v=20260330-icons-1" />
+  <script>
+    (function () {
+      var saved = localStorage.getItem('vs_theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #f1f5f9;
-      --card-bg:  #ffffff;
-      --border:   #e2e8f0;
-      --text:     #0f172a;
-      --sub:      #64748b;
-      --shadow:   0 4px 24px rgba(0,0,0,.08);
-      --shadow-h: 0 8px 36px rgba(0,0,0,.14);
+      --bg: #f1f5f9;
+      --bg-accent: #e2e8f0;
+      --card-bg: #ffffff;
+      --card-soft: #f8fafc;
+      --border: #d5dde7;
+      --text: #1e293b;
+      --sub: #64748b;
+      --brand: #2563eb;
+      --brand-h: #1d4ed8;
+      --danger: #b23a2b;
+      --ok: #12683b;
+      --shadow: 0 10px 28px rgba(15, 23, 42, .10);
+      --shadow-h: 0 14px 38px rgba(15, 23, 42, .16);
+      --cv-accent: #7c3aed;
+      --lf-accent: #16a34a;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg:       #0f172a;
-        --card-bg:  #1e293b;
-        --border:   #334155;
-        --text:     #f1f5f9;
-        --sub:      #94a3b8;
-        --shadow:   0 4px 24px rgba(0,0,0,.4);
-        --shadow-h: 0 8px 36px rgba(0,0,0,.6);
-      }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --bg-accent: #111827;
+      --card-bg: #1e293b;
+      --card-soft: #172033;
+      --border: #334155;
+      --text: #e2e8f0;
+      --sub: #94a3b8;
+      --brand: #60a5fa;
+      --brand-h: #3b82f6;
+      --danger: #f87171;
+      --ok: #4ade80;
+      --shadow: 0 10px 28px rgba(0, 0, 0, .45);
+      --shadow-h: 0 14px 38px rgba(0, 0, 0, .60);
+      --cv-accent: #a78bfa;
+      --lf-accent: #4ade80;
     }
 
     body {
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg);
+      min-height: 100vh;
+      background:
+        radial-gradient(1200px 500px at 10% -20%, var(--bg-accent), transparent 65%),
+        radial-gradient(1000px 500px at 100% 120%, rgba(59,130,246,.12), transparent 60%),
+        var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 2rem 1rem;
-      gap: 2.5rem;
+      font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+      padding: 28px 16px;
+    }
+
+    .theme-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      border-radius: 0;
+      padding: 0;
+      cursor: pointer;
+      box-shadow: none;
+      font-size: 18px;
+      line-height: 1;
+      transition: opacity .15s;
+    }
+
+    .theme-btn:hover {
+      background: none;
+      opacity: .8;
+    }
+
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.25fr .95fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .left, .right {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 24px;
     }
 
     .headline {
-      text-align: center;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
+
+    .suite-mark {
+      flex-shrink: 0;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(249, 115, 22, .12), rgba(249, 115, 22, .04));
+      box-shadow: var(--shadow);
+    }
+
+    .suite-mark img {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: block;
+    }
+
+    .headline-copy {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
     .headline h1 {
-      font-size: 1.75rem;
+      font-size: 34px;
       font-weight: 700;
-      letter-spacing: -.02em;
+      letter-spacing: -.015em;
     }
+
     .headline p {
-      margin-top: .4rem;
+      margin-top: 8px;
       color: var(--sub);
-      font-size: .95rem;
+      font-size: 15px;
+      line-height: 1.45;
     }
 
     .cards {
-      display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
     }
 
     .card {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      padding: 2rem 2.5rem;
-      width: 220px;
-      background: var(--card-bg);
+      gap: 12px;
+      padding: 18px;
+      background: var(--card-soft);
       border: 1px solid var(--border);
       border-radius: 16px;
       box-shadow: var(--shadow);
       text-decoration: none;
       color: var(--text);
-      cursor: pointer;
-      transition: transform .15s, box-shadow .15s;
+      transition: transform .15s ease, box-shadow .15s ease;
     }
+
     .card:hover {
       transform: translateY(-4px);
       box-shadow: var(--shadow-h);
     }
-    .card:active {
-      transform: translateY(-1px);
+
+    .card.crossed {
+      border-color: rgba(124, 58, 237, .45);
+      background:
+        linear-gradient(160deg, rgba(124, 58, 237, .10), var(--card-soft) 48%);
+    }
+
+    .card.leaf {
+      border-color: rgba(22, 163, 74, .45);
+      background:
+        linear-gradient(160deg, rgba(22, 163, 74, .10), var(--card-soft) 48%);
+    }
+
+    [data-theme="dark"] .card.crossed {
+      background:
+        linear-gradient(160deg, rgba(167, 139, 250, .16), var(--card-soft) 52%);
+    }
+
+    [data-theme="dark"] .card.leaf {
+      background:
+        linear-gradient(160deg, rgba(74, 222, 128, .16), var(--card-soft) 52%);
     }
 
     .card img {
-      width: 72px;
-      height: 72px;
-      border-radius: 18px;
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
     }
 
     .card-name {
-      font-size: 1.15rem;
+      font-size: 19px;
       font-weight: 700;
     }
+
     .card-desc {
-      font-size: .82rem;
+      font-size: 13px;
       color: var(--sub);
-      text-align: center;
       line-height: 1.4;
+    }
+
+    .register-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .register-sub {
+      font-size: 14px;
+      color: var(--sub);
+      margin-bottom: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: var(--sub);
+    }
+
+    .field input {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card-bg);
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.20);
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--brand);
+      color: #fff;
+      transition: background .15s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--brand-h);
+    }
+
+    .btn:disabled {
+      opacity: .7;
+      cursor: not-allowed;
+    }
+
+    .msg {
+      min-height: 18px;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .msg.error { color: var(--danger); }
+    .msg.ok { color: var(--ok); }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--sub);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+      .headline {
+        align-items: flex-start;
+      }
+      .headline h1 {
+        font-size: 28px;
+      }
+      .cards {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="headline">
-    <h1>Welcome</h1>
-    <p>Choose an application to open</p>
-  </div>
+  <button id="theme-toggle" class="theme-btn" type="button" aria-label="Toggle theme">🌙</button>
 
-  <div class="cards">
-    <a class="card" href="/tasks/">
-      <img src="/tasks/favicon.svg" alt="Crossed Viper" />
-      <span class="card-name">Crossed Viper</span>
-      <span class="card-desc">Manage your tasks and to-do lists</span>
-    </a>
+  <main class="shell">
+    <section class="left">
+      <div class="headline">
+        <div class="suite-mark">
+          <img src="/icon-256.png?v=20260330-icons-1" alt="Viper Suite" />
+        </div>
+        <div class="headline-copy">
+          <h1>Viper Suite</h1>
+          <p>Choose your workspace and continue with your daily flow.</p>
+        </div>
+      </div>
 
-    <a class="card" href="/budget/">
-      <img src="/budget/favicon.svg" alt="Leaf Viper" />
-      <span class="card-name">Leaf Viper</span>
-      <span class="card-desc">Track your income and expenses</span>
-    </a>
-  </div>
+      <div class="cards">
+        <a class="card crossed" href="/crossed-viper/">
+          <img src="/crossed-viper/favicon.svg?v=20260330-icons-1" alt="Crossed Viper" />
+          <span class="card-name">Crossed Viper</span>
+          <span class="card-desc">Manage your tasks and to-do lists.</span>
+        </a>
+
+        <a class="card leaf" href="/leaf-viper/">
+          <img src="/leaf-viper/favicon.svg?v=20260330-icons-1" alt="Leaf Viper" />
+          <span class="card-name">Leaf Viper</span>
+          <span class="card-desc">Track your income and expenses.</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="right">
+      <h2 class="register-title">Create Account</h2>
+      <p class="register-sub">Register once, then sign in from either app.</p>
+
+      <form id="register-form" novalidate>
+        <div class="field">
+          <label for="reg-username">Username</label>
+          <input id="reg-username" type="text" minlength="3" maxlength="64" required />
+        </div>
+
+        <div class="field">
+          <label for="reg-password">Password</label>
+          <input id="reg-password" type="password" minlength="6" maxlength="128" required />
+        </div>
+
+        <div class="field">
+          <label for="reg-password-confirm">Confirm Password</label>
+          <input id="reg-password-confirm" type="password" minlength="6" maxlength="128" required />
+        </div>
+
+        <button id="register-btn" class="btn" type="submit">Create Account</button>
+        <p id="register-msg" class="msg"></p>
+      </form>
+
+      <p class="hint">
+        After registration, open Crossed Viper or Leaf Viper and log in with the same credentials.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var btn = document.getElementById('theme-toggle');
+
+      function syncThemeButton() {
+        var dark = root.getAttribute('data-theme') === 'dark';
+        btn.textContent = dark ? '☀️' : '🌙';
+      }
+
+      btn.addEventListener('click', function () {
+        var dark = root.getAttribute('data-theme') === 'dark';
+        var next = dark ? 'light' : 'dark';
+        if (next === 'dark') root.setAttribute('data-theme', 'dark');
+        else root.removeAttribute('data-theme');
+        localStorage.setItem('vs_theme', next);
+        syncThemeButton();
+      });
+
+      syncThemeButton();
+    })();
+
+    (function () {
+      var form = document.getElementById('register-form');
+      var btn = document.getElementById('register-btn');
+      var msg = document.getElementById('register-msg');
+
+      function setMessage(text, ok) {
+        msg.textContent = text;
+        msg.className = 'msg ' + (ok ? 'ok' : 'error');
+      }
+
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        setMessage('', false);
+
+        var username = document.getElementById('reg-username').value.trim();
+        var password = document.getElementById('reg-password').value;
+        var confirmPassword = document.getElementById('reg-password-confirm').value;
+
+        if (username.length < 3) {
+          setMessage('Username must be at least 3 characters.', false);
+          return;
+        }
+        if (password.length < 6) {
+          setMessage('Password must be at least 6 characters.', false);
+          return;
+        }
+        if (password !== confirmPassword) {
+          setMessage('Passwords do not match.', false);
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+
+        try {
+          var response = await fetch('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username, password: password })
+          });
+
+          if (!response.ok) {
+            var data = await response.json().catch(function () { return {}; });
+            throw new Error(data.detail || ('Error ' + response.status));
+          }
+
+          form.reset();
+          setMessage('Account created successfully. You can now sign in in either app.', true);
+        } catch (error) {
+          setMessage(error.message || 'Registration failed.', false);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Create Account';
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -5,13 +5,14 @@ from sqlalchemy.orm import Session
 
 from app.auth import hash_password
 from app.database import get_db
-from app.dependencies import get_admin_user
+from app.dependencies import get_admin_user, get_current_user
 from app.models import User
-from app.schemas import UserCreate, UserOut, UserUpdate
+from app.schemas import UserCreate, UserOut, UserSelfUpdate, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 AdminDep = Annotated[User, Depends(get_admin_user)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
 DbDep = Annotated[Session, Depends(get_db)]
 
 
@@ -33,6 +34,26 @@ def create_user(body: UserCreate, _admin: AdminDep, db: DbDep):
 @router.get("", response_model=list[UserOut])
 def list_users(_admin: AdminDep, db: DbDep):
     return db.query(User).all()
+
+
+@router.patch("/me", response_model=UserOut)
+def update_me(body: UserSelfUpdate, current_user: CurrentUserDep, db: DbDep):
+    if body.username is not None:
+        conflict = db.query(User).filter(User.username == body.username, User.id != current_user.id).first()
+        if conflict:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already taken")
+        current_user.username = body.username
+    if body.password is not None:
+        current_user.password_hash = hash_password(body.password)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_me(current_user: CurrentUserDep, db: DbDep):
+    db.delete(current_user)
+    db.commit()
 
 
 @router.get("/{user_id}", response_model=UserOut)

@@ -81,11 +81,58 @@
 
 /* ── Theme toggle button ────────────────────────────────────────────────── */
 .btn-theme {
-  background: none; border: none; cursor: pointer;
-  font-size: 17px; padding: 4px 7px; border-radius: 6px; line-height: 1;
-  color: #fff; transition: background .15s;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  border-radius: 0;
+  line-height: 1;
+  color: #fff;
+  transition: opacity .15s;
 }
-.btn-theme:hover { background: rgba(255,255,255,.12); }
+.btn-theme:hover { background: none !important; opacity: .8; }
+
+.icon-only-btn,
+.icon-only-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 18px;
+  opacity: 1;
+  transition: opacity .15s;
+}
+
+.icon-only-btn:hover,
+.icon-only-link:hover {
+  background: none !important;
+  opacity: .8;
+}
+
+.topbar .icon-only-btn,
+.topbar .icon-only-link,
+.login-card .icon-only-link {
+  color: #fff;
+}
+
+.icon-only-link img,
+.icon-only-btn img {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
 
 body { font-family: "Inter", "Segoe UI", system-ui, sans-serif; color: var(--text); }
 

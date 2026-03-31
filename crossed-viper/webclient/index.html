@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Crossed Viper — Sign In</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css?v=20260330-2" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260330-icons-1" />
+  <link rel="manifest" href="manifest.json?v=20260330-icons-1" />
   <script>(function(){var s=localStorage.getItem('ot_theme'),d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(s===null&&d))document.documentElement.setAttribute('data-theme','dark');else if(s==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
 </head>
 <body class="login-body">
@@ -16,7 +16,7 @@
   <!-- ── Server setup screen ─────────────────────────────────────────────── -->
   <div id="setup-card" class="login-card hidden">
     <div class="login-logo">
-      <img src="favicon.svg" width="64" height="64" style="border-radius:14px" alt="Crossed Viper" />
+      <img src="favicon.svg?v=20260330-icons-1" width="64" height="64" style="border-radius:14px" alt="Crossed Viper" />
     </div>
     <h1 class="login-title">Crossed Viper</h1>
     <p class="login-sub">Enter your server address</p>
@@ -55,16 +55,27 @@
         Sign In
       </button>
     </form>
+    <p style="margin-top:10px;font-size:.82rem;color:#94a3b8;text-align:center">
+      Don't have an account?
+      <a id="register-link" href="/" style="color:#60a5fa;text-decoration:none">Register here</a>
+    </p>
     <button id="change-server-btn" class="btn btn-ghost btn-full" style="margin-top:8px;font-size:.8rem">
       ⚙ Change server
     </button>
+    <a id="btn-switch-app" href="#" class="btn btn-ghost btn-full" style="margin-top:8px;font-size:.8rem">
+      <img src="/leaf-viper/icon-256.png" alt="" style="width:14px;height:14px;border-radius:3px;pointer-events:none">
+      Go to Leaf Viper
+    </a>
   </div>
 
   <script>
     const _CAP      = typeof window.Capacitor !== 'undefined' ||
                       window.location.origin === 'https://localhost' ||
                       window.location.origin === 'capacitor://localhost';
-    const PATH_APP  = _CAP ? 'app.html' : '/tasks/app.html';
+    const PATH_APP  = _CAP ? 'app.html' : '/crossed-viper/app.html';
+    const SHOW_CHANGE_SERVER = window._SHOW_CHANGE_SERVER !== false;
+    localStorage.setItem('ot_show_change_server', SHOW_CHANGE_SERVER ? '1' : '0');
+    localStorage.setItem('ob_show_change_server', SHOW_CHANGE_SERVER ? '1' : '0');
     const serverUrl = () => (localStorage.getItem('ot_server') || '').replace(/\/$/, '');    
 
     function showSetup(prefill) {
@@ -131,6 +142,44 @@
     document.getElementById('change-server-btn').addEventListener('click', () => {
       showSetup(serverUrl());
     });
+
+    // ── Change-server visibility ──────────────────────────────────────────────
+    if (!SHOW_CHANGE_SERVER) {
+      document.getElementById('change-server-btn').style.display = 'none';
+    }
+
+    // ── Switch to Leaf Viper ─────────────────────────────────────────────────
+    (function () {
+      const switchBtn = document.getElementById('btn-switch-app');
+      const budgetUrl = serverUrl() ? serverUrl().replace(/\/$/, '') + '/leaf-viper/' : '/leaf-viper/';
+      const leafViperPackage = 'com.leafviper.app';
+      switchBtn.href = budgetUrl;
+      switchBtn.addEventListener('click', async function (event) {
+        const launcher = globalThis.Capacitor?.Plugins?.AppLauncher;
+        if (_CAP && launcher && typeof launcher.canOpenUrl === 'function' && typeof launcher.openUrl === 'function') {
+          event.preventDefault();
+          try {
+            const canOpen = await launcher.canOpenUrl({ url: leafViperPackage });
+            if (canOpen?.value) {
+              await launcher.openUrl({ url: leafViperPackage });
+              return;
+            }
+          } catch {}
+        }
+
+        const desktopApi = globalThis.pywebview?.api;
+        if (!desktopApi || typeof desktopApi.switch_app !== 'function') return;
+        event.preventDefault();
+        try {
+          const opened = await desktopApi.switch_app('leaf-viper');
+          if (!opened) globalThis.location.href = budgetUrl;
+        } catch {
+          globalThis.location.href = budgetUrl;
+        }
+      });
+      const registerLink = document.getElementById('register-link');
+      registerLink.href = serverUrl() ? serverUrl().replace(/\/$/, '') + '/' : '/';
+    })();
 
     // ── Theme toggle ───────────────────────────────────────────────────────────────
     (function() {
