@@ -2,7 +2,7 @@
 ; Download Inno Setup 6 from: https://jrsoftware.org/isdl.php
 ;
 ; Build (after PyInstaller, from project root):
-;   "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" crossed-viper\desktopclient\installer.iss
+;   "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" crossed-viper\desktopclient\crossed_viper_installer.iss
 
 [Setup]
 AppName=Crossed Viper

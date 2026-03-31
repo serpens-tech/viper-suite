@@ -1,20 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
-# PyInstaller spec for OpenTask (Windows)
+# PyInstaller spec for Crossed Viper (Windows)
 #
 # Requirements (run in your venv):
 #   pip install pyinstaller
 #
 # Build (from the project root):
-#   pyinstaller build/opentask_windows.spec --clean --noconfirm
+#   pyinstaller crossed-viper/desktopclient/crossed_viper_windows.spec --clean --noconfirm
 
 block_cipher = None
 
 a = Analysis(
-    ['desktopclient/main.py'],
+    ['crossed-viper/desktopclient/main.py'],
     pathex=['.'],
     binaries=[],
     datas=[
-        ('crossed-viper/webclient', 'webclient'),
+        ('crossed-viper/webclient', 'crossed-viper/webclient'),
     ],
     hiddenimports=[],
     hookspath=[],

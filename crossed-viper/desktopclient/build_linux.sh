@@ -71,14 +71,15 @@ PRERM
 chmod 755 "${DIST}/DEBIAN/prerm"
 
 # ── Launcher script ───────────────────────────────────────────────────────────
-cat > "${DIST}/opt/crossed-viper/crossed-viper" <<'LAUNCHER'
+mkdir -p "${DIST}/opt/crossed-viper/bin"
+cat > "${DIST}/opt/crossed-viper/bin/crossed-viper" <<'LAUNCHER'
 #!/bin/bash
 cd /opt/crossed-viper
 exec .venv/bin/python crossed-viper/desktopclient/main.py "$@"
 LAUNCHER
-chmod +x "${DIST}/opt/crossed-viper/crossed-viper"
+chmod +x "${DIST}/opt/crossed-viper/bin/crossed-viper"
 
-ln -s /opt/crossed-viper/crossed-viper "${DIST}/usr/bin/crossed-viper"
+ln -s /opt/crossed-viper/bin/crossed-viper "${DIST}/usr/bin/crossed-viper"
 
 # ── .desktop entry ────────────────────────────────────────────────────────────
 cat > "${DIST}/usr/share/applications/crossed-viper.desktop" <<EOF
@@ -87,7 +88,7 @@ Name=Crossed Viper
 Icon=crossed-viper
 GenericName=Task Manager
 Comment=Manage your tasks and to-do lists
-Exec=/opt/crossed-viper/crossed-viper
+Exec=/opt/crossed-viper/bin/crossed-viper
 Terminal=false
 Type=Application
 Categories=Utility;ProjectManagement;Office;

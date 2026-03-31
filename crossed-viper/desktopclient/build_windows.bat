@@ -24,7 +24,7 @@ pip install "pywebview>=4.0.0"
 :: ── Build with PyInstaller ────────────────────────────────────────────────────
 echo.
 echo [*] Building with PyInstaller...
-pyinstaller crossed-viper\desktopclient\opentask_windows.spec --clean --noconfirm
+pyinstaller crossed-viper\desktopclient\crossed_viper_windows.spec --clean --noconfirm
 
 if errorlevel 1 (
     echo.
@@ -43,7 +43,7 @@ if not exist %ISCC% set ISCC="C:\Program Files\Inno Setup 6\ISCC.exe"
 if exist %ISCC% (
     echo.
     echo [*] Creating installer with Inno Setup...
-    %ISCC% crossed-viper\desktopclient\installer.iss
+    %ISCC% crossed-viper\desktopclient\crossed_viper_installer.iss
     if errorlevel 1 (
         echo [ERROR] Inno Setup failed.
     ) else (
@@ -54,7 +54,7 @@ if exist %ISCC% (
     echo [!] Inno Setup not found — skipping installer creation.
     echo     To build an installer, install Inno Setup 6 from:
     echo     https://jrsoftware.org/isdl.php
-    echo     Then run: %ISCC% crossed-viper\desktopclient\installer.iss
+    echo     Then run: %ISCC% crossed-viper\desktopclient\crossed_viper_installer.iss
 )
 
 echo.

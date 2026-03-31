@@ -1,20 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
-# PyInstaller spec for Crossed Viper (Windows)
+# PyInstaller spec for Leaf Viper (Windows)
 #
 # Requirements (run in your venv):
 #   pip install pyinstaller
 #
 # Build (from the project root):
-#   pyinstaller crossed-viper/desktopclient/opentask_windows.spec --clean --noconfirm
+#   pyinstaller leaf-viper/desktopclient/leaf_viper_windows.spec --clean --noconfirm
 
 block_cipher = None
 
 a = Analysis(
-    ['crossed-viper/desktopclient/main.py'],
+    ['leaf-viper/desktopclient/main.py'],
     pathex=['.'],
     binaries=[],
     datas=[
-        ('crossed-viper/webclient', 'crossed-viper/webclient'),
+        ('leaf-viper/webclient', 'leaf-viper/webclient'),
     ],
     hiddenimports=[],
     hookspath=[],
@@ -34,13 +34,13 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='CrossedViper',
+    name='LeafViper',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,          # no console window in production
-    icon='crossed-viper/webclient/icon.ico',
+    console=False,
+    icon='leaf-viper/webclient/favicon.ico',
 )
 
 coll = COLLECT(
@@ -51,5 +51,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='CrossedViper',
+    name='LeafViper',
 )

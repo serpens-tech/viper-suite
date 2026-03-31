@@ -183,8 +183,8 @@ viper-suite/
 │   │   ├── main.py               # Serves webclient on port 5501
 │   │   ├── build_linux.sh        # Builds .deb installer
 │   │   ├── build_windows.bat     # Builds Windows .exe via PyInstaller
-│   │   ├── opentask_windows.spec # PyInstaller spec
-│   │   └── installer.iss         # Inno Setup script
+│   │   ├── crossed_viper_windows.spec   # PyInstaller spec
+│   │   └── crossed_viper_installer.iss  # Inno Setup script
 │   └── androidclient/            # Capacitor Android wrapper
 │       ├── build_android.sh      # Builds debug APK
 │       ├── capacitor.config.json
@@ -192,9 +192,13 @@ viper-suite/
 ├── leaf-viper/
 │   ├── webclient/                # Leaf Viper web UI (HTML/CSS/JS)
 │   ├── desktopclient/            # PyWebView desktop wrapper
-│   │   └── main.py               # Serves webclient on port 5502
+│   │   ├── main.py               # Serves webclient on port 5502
+│   │   ├── build_linux.sh        # Builds .deb installer
+│   │   ├── build_windows.bat     # Builds Windows .exe via PyInstaller
+│   │   ├── leaf_viper_windows.spec   # PyInstaller spec
+│   │   └── leaf_viper_installer.iss  # Inno Setup script
 │   └── androidclient/            # Capacitor Android wrapper
-│       ├── build_android_budget.sh
+│       ├── build_android.sh
 │       ├── capacitor.config.json
 │       └── android/
 ├── Dockerfile
@@ -213,16 +217,23 @@ All clients connect to your own running Viper Suite server — they do **not** i
 > **Requirements:** `dpkg-dev`, `python3-venv`
 
 ```bash
-# Run from the project root:
+# Crossed Viper (.deb) — run from the project root:
 bash crossed-viper/desktopclient/build_linux.sh
+
+# Leaf Viper (.deb) — run from the project root:
+bash leaf-viper/desktopclient/build_linux.sh
 ```
 
-Produces `dist/deb/crossed-viper_1.0.0_amd64.deb`. Install with:
+Produces `dist/deb/crossed-viper_1.0.0_amd64.deb` and `dist/deb/leaf-viper_1.0.0_amd64.deb`.
+
+Install with:
 
 ```bash
 sudo dpkg -i dist/deb/crossed-viper_1.0.0_amd64.deb
+sudo dpkg -i dist/deb/leaf-viper_1.0.0_amd64.deb
 sudo apt-get install -f    # resolve any missing system deps
 crossed-viper
+leaf-viper
 ```
 
 ### Desktop (Windows)
@@ -230,11 +241,15 @@ crossed-viper
 > **Requirements:** Python 3.10+, [PyInstaller](https://pyinstaller.org), optionally [Inno Setup 6](https://jrsoftware.org/isdl.php)
 
 ```bat
-REM Run from the project root:
+REM Crossed Viper (.exe) — run from the project root:
 crossed-viper\desktopclient\build_windows.bat
+
+REM Leaf Viper (.exe) — run from the project root:
+leaf-viper\desktopclient\build_windows.bat
 ```
 
-Produces `dist\CrossedViper\CrossedViper.exe`. If Inno Setup is installed, also builds `dist\installer\CrossedViper_Setup_1.0.0.exe`.
+Produces `dist\CrossedViper\CrossedViper.exe` and `dist\LeafViper\LeafViper.exe`.
+If Inno Setup is installed, also builds installers in `dist\installer`.
 
 ### Desktop (run from source)
 
@@ -255,7 +270,7 @@ Produces `dist\CrossedViper\CrossedViper.exe`. If Inno Setup is installed, also 
 bash crossed-viper/androidclient/build_android.sh
 
 # Leaf Viper APK — run from the project root:
-bash leaf-viper/androidclient/build_android_budget.sh
+bash leaf-viper/androidclient/build_android.sh
 ```
 
 Each script installs Node dependencies, syncs web assets into the Android project, and produces a debug APK:
