@@ -282,18 +282,3 @@ cd leaf-viper/androidclient && npx cap open android
 ```
 
 ---
-
-## Contributing
-
-Contributions are welcome! Please open an issue first if you want to discuss a larger change.
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m "Add my feature"`
-4. Push and open a Pull Request
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
