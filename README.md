@@ -13,8 +13,6 @@ A self-hosted task and budget management suite. Run it with a single `docker com
 - [API Documentation](#api-documentation)
 - [Development Setup](#development-setup)
 - [Desktop & Mobile Clients](#desktop--mobile-clients)
-- [Contributing](#contributing)
-- [License](#license)
 
 ---
 
