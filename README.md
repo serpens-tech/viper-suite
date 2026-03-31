@@ -59,7 +59,7 @@ A self-hosted task and budget management suite. Run it with a single `docker com
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/viper-suite.git
+git clone https://github.com/serpens-tech/viper-suite.git
 cd viper-suite
 
 # 2. Start the application
@@ -148,7 +148,7 @@ The interactive API docs are available while the server is running:
 
 ```bash
 # Clone and enter the project
-git clone https://github.com/your-username/viper-suite.git
+git clone https://github.com/serpens-tech/viper-suite.git
 cd viper-suite
 
 # Create and activate a virtual environment
