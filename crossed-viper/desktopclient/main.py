@@ -130,8 +130,9 @@ def main():
         width    = 1200,
         height   = 740,
         min_size = (820, 560),
+        js_api   = DesktopBridge(),
     )
-    webview.start(debug=False, gui=gui, private_mode=False, js_api=DesktopBridge())
+    webview.start(debug=False, gui=gui, private_mode=False)
 
 
 if __name__ == "__main__":

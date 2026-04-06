@@ -1,18 +1,24 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const API = (localStorage.getItem('ob_server') || globalThis.location.origin).replace(/\/$/, '');
+const API = (localStorage.getItem('ob_server') || '').replace(/\/$/, '');
+const IS_LOCAL_MODE = localStorage.getItem('ob_auth_mode') === 'local';
 
 // Capacitor (Android) serves files from https://localhost — detect it so that
 // internal redirects use relative paths instead of /leaf-viper/…
 const _CAP       = globalThis.Capacitor !== undefined ||
                    globalThis.location.origin === 'https://localhost' ||
                    globalThis.location.origin === 'capacitor://localhost';
-const PATH_INDEX  = _CAP ? 'index.html' : '/leaf-viper/';
+const _DESKTOP    = globalThis.location.hostname === '127.0.0.1';
+const _LOCAL_CLIENT = _CAP || _DESKTOP;
+const PATH_INDEX  = _LOCAL_CLIENT ? 'index.html' : '/leaf-viper/';
 const SHOW_CHANGE_SERVER =
   globalThis._SHOW_CHANGE_SERVER !== false &&
   localStorage.getItem('ob_show_change_server') !== '0';
-const TASKS_APP_URL = _CAP ? `${API}/crossed-viper/` : '/crossed-viper/';
+let TASKS_APP_URL = '/crossed-viper/';
+if (_LOCAL_CLIENT && !IS_LOCAL_MODE) {
+  TASKS_APP_URL = `${API}/crossed-viper/`;
+}
 const CROSSED_VIPER_PACKAGE = 'com.crossedviper.app';
 
 async function switchAppTarget(target, androidPackage, fallbackUrl) {
@@ -112,25 +118,326 @@ async function apiFetch(method, path, body = null) {
   return res.json();
 }
 
-const api = {
-  me:             ()           => apiFetch('GET',    '/auth/me'),
-  updateMe:       body         => apiFetch('PATCH',  '/users/me', body),
-  deleteMe:       ()           => apiFetch('DELETE', '/users/me'),
-  getSummary:     ()           => apiFetch('GET',    '/finance/summary'),
-  getIncomes:     ()           => apiFetch('GET',    '/finance/incomes'),
-  createIncome:   body         => apiFetch('POST',   '/finance/incomes', body),
-  updateIncome:   (id, body)   => apiFetch('PATCH',  `/finance/incomes/${id}`, body),
-  deleteIncome:   id           => apiFetch('DELETE', `/finance/incomes/${id}`),
-  getExpenses:    ()           => apiFetch('GET',    '/finance/expenses'),
-  createExpense:  body         => apiFetch('POST',   '/finance/expenses', body),
-  updateExpense:  (id, body)   => apiFetch('PATCH',  `/finance/expenses/${id}`, body),
-  deleteExpense:  id           => apiFetch('DELETE', `/finance/expenses/${id}`),
-  // admin
-  getUsers:       ()           => apiFetch('GET',    '/users'),
-  createUser:     body         => apiFetch('POST',   '/users', body),
-  updateUser:     (id, body)   => apiFetch('PATCH',  `/users/${id}`, body),
-  deleteUser:     id           => apiFetch('DELETE', `/users/${id}`),
-};
+function getLocalJson(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setLocalJson(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getLocalCurrentUserId() {
+  const tokenUserId = String(token || '').startsWith('local:')
+    ? Number.parseInt(String(token).slice(6), 10)
+    : Number.parseInt(localStorage.getItem('ob_local_current_user') || '', 10);
+  return Number.isNaN(tokenUserId) ? null : tokenUserId;
+}
+
+function requireLocalUser() {
+  const userId = getLocalCurrentUserId();
+  if (!userId) {
+    localStorage.removeItem('ob_token');
+    globalThis.location.href = PATH_INDEX;
+    throw new Error('Not authenticated');
+  }
+  const users = getLocalJson('ob_local_users', []);
+  const user = users.find(u => u.id === userId);
+  if (!user) {
+    localStorage.removeItem('ob_token');
+    globalThis.location.href = PATH_INDEX;
+    throw new Error('User not found');
+  }
+  return { user, users };
+}
+
+function localPublicUser(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    is_admin: !!user.is_admin,
+    created_at: user.created_at,
+  };
+}
+
+function isValidPin(pin) {
+  return /^\d{4,8}$/.test(pin);
+}
+
+function nextId(items) {
+  return items.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
+}
+
+function localApiNotSupported() {
+  throw new Error('Admin features are not available in local account mode.');
+}
+
+function buildLocalSummary(incomeRows, expenseRows) {
+  const monthlyMap = new Map();
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  incomeRows.forEach(row => {
+    totalIncome += Number(row.amount) || 0;
+    const key = String(row.date || '').slice(0, 7);
+    if (!monthlyMap.has(key)) monthlyMap.set(key, { income: 0, expense: 0 });
+    monthlyMap.get(key).income += Number(row.amount) || 0;
+  });
+
+  expenseRows.forEach(row => {
+    totalExpense += Number(row.amount) || 0;
+    const key = String(row.date || '').slice(0, 7);
+    if (!monthlyMap.has(key)) monthlyMap.set(key, { income: 0, expense: 0 });
+    monthlyMap.get(key).expense += Number(row.amount) || 0;
+  });
+
+  const monthly = [...monthlyMap.entries()]
+    .filter(([key]) => /^\d{4}-\d{2}$/.test(key))
+    .map(([key, values]) => {
+      const [yearStr, monthStr] = key.split('-');
+      const year = Number.parseInt(yearStr, 10);
+      const month = Number.parseInt(monthStr, 10);
+      return {
+        year,
+        month,
+        income: values.income,
+        expense: values.expense,
+        net: values.income - values.expense,
+      };
+    })
+    .sort((a, b) => {
+      const ka = a.year * 100 + a.month;
+      const kb = b.year * 100 + b.month;
+      return kb - ka;
+    });
+
+  return {
+    total_income: totalIncome,
+    total_expense: totalExpense,
+    balance: totalIncome - totalExpense,
+    monthly,
+  };
+}
+
+function createLocalApi() {
+  return {
+    me: async () => {
+      const { user } = requireLocalUser();
+      return localPublicUser(user);
+    },
+    updateMe: async (body) => {
+      const { user, users } = requireLocalUser();
+      if (body.username) {
+        const conflict = users.find(u => u.username === body.username && u.id !== user.id);
+        if (conflict) throw new Error('Username already taken');
+        user.username = body.username;
+      }
+      if (body.password) user.password = body.password;
+      if (body.pin !== undefined) {
+        if (body.pin === '') {
+          delete user.pin;
+        } else if (isValidPin(body.pin)) {
+          user.pin = body.pin;
+        } else {
+          throw new Error('PIN must be 4 to 8 digits.');
+        }
+      }
+      setLocalJson('ob_local_users', users);
+      return localPublicUser(user);
+    },
+    deleteMe: async () => {
+      const { user, users } = requireLocalUser();
+      const incomesStore = getLocalJson('ob_local_incomes', []);
+      const expensesStore = getLocalJson('ob_local_expenses', []);
+      setLocalJson('ob_local_users', users.filter(u => u.id !== user.id));
+      setLocalJson('ob_local_incomes', incomesStore.filter(e => e.user_id !== user.id));
+      setLocalJson('ob_local_expenses', expensesStore.filter(e => e.user_id !== user.id));
+      localStorage.removeItem('ob_token');
+      localStorage.removeItem('ob_local_current_user');
+      return null;
+    },
+    getSummary: async () => {
+      const { user } = requireLocalUser();
+      const incomesStore = getLocalJson('ob_local_incomes', []).filter(e => e.user_id === user.id);
+      const expensesStore = getLocalJson('ob_local_expenses', []).filter(e => e.user_id === user.id);
+      return buildLocalSummary(incomesStore, expensesStore);
+    },
+    getIncomes: async () => {
+      const { user } = requireLocalUser();
+      return getLocalJson('ob_local_incomes', [])
+        .filter(e => e.user_id === user.id)
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.id - a.id));
+    },
+    createIncome: async (body) => {
+      const { user } = requireLocalUser();
+      const store = getLocalJson('ob_local_incomes', []);
+      const item = {
+        id: nextId(store),
+        user_id: user.id,
+        name: body.name,
+        description: body.description ?? null,
+        amount: body.amount,
+        date: body.date,
+      };
+      store.push(item);
+      setLocalJson('ob_local_incomes', store);
+      return item;
+    },
+    updateIncome: async (id, body) => {
+      const { user } = requireLocalUser();
+      const itemId = Number.parseInt(String(id), 10);
+      const store = getLocalJson('ob_local_incomes', []);
+      const item = store.find(e => e.id === itemId && e.user_id === user.id);
+      if (!item) throw new Error('Income entry not found');
+      if (body.name !== undefined) item.name = body.name;
+      if (body.description !== undefined) item.description = body.description;
+      if (body.amount !== undefined) item.amount = body.amount;
+      if (body.date !== undefined) item.date = body.date;
+      setLocalJson('ob_local_incomes', store);
+      return item;
+    },
+    deleteIncome: async (id) => {
+      const { user } = requireLocalUser();
+      const itemId = Number.parseInt(String(id), 10);
+      const store = getLocalJson('ob_local_incomes', []);
+      const exists = store.some(e => e.id === itemId && e.user_id === user.id);
+      if (!exists) throw new Error('Income entry not found');
+      setLocalJson('ob_local_incomes', store.filter(e => !(e.id === itemId && e.user_id === user.id)));
+      return null;
+    },
+    getExpenses: async () => {
+      const { user } = requireLocalUser();
+      return getLocalJson('ob_local_expenses', [])
+        .filter(e => e.user_id === user.id)
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.id - a.id));
+    },
+    createExpense: async (body) => {
+      const { user } = requireLocalUser();
+      const store = getLocalJson('ob_local_expenses', []);
+      const item = {
+        id: nextId(store),
+        user_id: user.id,
+        name: body.name,
+        description: body.description ?? null,
+        amount: body.amount,
+        date: body.date,
+      };
+      store.push(item);
+      setLocalJson('ob_local_expenses', store);
+      return item;
+    },
+    updateExpense: async (id, body) => {
+      const { user } = requireLocalUser();
+      const itemId = Number.parseInt(String(id), 10);
+      const store = getLocalJson('ob_local_expenses', []);
+      const item = store.find(e => e.id === itemId && e.user_id === user.id);
+      if (!item) throw new Error('Expense entry not found');
+      if (body.name !== undefined) item.name = body.name;
+      if (body.description !== undefined) item.description = body.description;
+      if (body.amount !== undefined) item.amount = body.amount;
+      if (body.date !== undefined) item.date = body.date;
+      setLocalJson('ob_local_expenses', store);
+      return item;
+    },
+    deleteExpense: async (id) => {
+      const { user } = requireLocalUser();
+      const itemId = Number.parseInt(String(id), 10);
+      const store = getLocalJson('ob_local_expenses', []);
+      const exists = store.some(e => e.id === itemId && e.user_id === user.id);
+      if (!exists) throw new Error('Expense entry not found');
+      setLocalJson('ob_local_expenses', store.filter(e => !(e.id === itemId && e.user_id === user.id)));
+      return null;
+    },
+    getUsers: async () => localApiNotSupported(),
+    createUser: async () => localApiNotSupported(),
+    updateUser: async () => localApiNotSupported(),
+    deleteUser: async () => localApiNotSupported(),
+  };
+}
+
+const api = IS_LOCAL_MODE
+  ? createLocalApi()
+  : {
+      me:             ()           => apiFetch('GET',    '/auth/me'),
+      updateMe:       body         => apiFetch('PATCH',  '/users/me', body),
+      deleteMe:       ()           => apiFetch('DELETE', '/users/me'),
+      getSummary:     ()           => apiFetch('GET',    '/finance/summary'),
+      getIncomes:     ()           => apiFetch('GET',    '/finance/incomes'),
+      createIncome:   body         => apiFetch('POST',   '/finance/incomes', body),
+      updateIncome:   (id, body)   => apiFetch('PATCH',  `/finance/incomes/${id}`, body),
+      deleteIncome:   id           => apiFetch('DELETE', `/finance/incomes/${id}`),
+      getExpenses:    ()           => apiFetch('GET',    '/finance/expenses'),
+      createExpense:  body         => apiFetch('POST',   '/finance/expenses', body),
+      updateExpense:  (id, body)   => apiFetch('PATCH',  `/finance/expenses/${id}`, body),
+      deleteExpense:  id           => apiFetch('DELETE', `/finance/expenses/${id}`),
+      // admin
+      getUsers:       ()           => apiFetch('GET',    '/users'),
+      createUser:     body         => apiFetch('POST',   '/users', body),
+      updateUser:     (id, body)   => apiFetch('PATCH',  `/users/${id}`, body),
+      deleteUser:     id           => apiFetch('DELETE', `/users/${id}`),
+    };
+
+function buildLocalBackup() {
+  return {
+    version: 1,
+    exported_at: new Date().toISOString(),
+    crossed: {
+      users: getLocalJson('ot_local_users', []),
+      lists: getLocalJson('ot_local_lists', []),
+      tasks: getLocalJson('ot_local_tasks', []),
+      current_user: localStorage.getItem('ot_local_current_user') || null,
+    },
+    leaf: {
+      users: getLocalJson('ob_local_users', []),
+      incomes: getLocalJson('ob_local_incomes', []),
+      expenses: getLocalJson('ob_local_expenses', []),
+      current_user: localStorage.getItem('ob_local_current_user') || null,
+    },
+  };
+}
+
+function exportLocalBackup() {
+  const backup = buildLocalBackup();
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `opentask-local-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function applyImportedArray(payload, path, key) {
+  if (payload[path] && Array.isArray(payload[path][key])) {
+    setLocalJson(`${path === 'crossed' ? 'ot' : 'ob'}_local_${key}`, payload[path][key]);
+  }
+}
+
+async function importLocalBackup(file) {
+  const text = await file.text();
+  const data = JSON.parse(text);
+  if (!data || typeof data !== 'object') throw new Error('Invalid backup file format.');
+
+  applyImportedArray(data, 'crossed', 'users');
+  applyImportedArray(data, 'crossed', 'lists');
+  applyImportedArray(data, 'crossed', 'tasks');
+  applyImportedArray(data, 'leaf', 'users');
+  applyImportedArray(data, 'leaf', 'incomes');
+  applyImportedArray(data, 'leaf', 'expenses');
+
+  if (data.crossed && typeof data.crossed.current_user === 'string') {
+    localStorage.setItem('ot_local_current_user', data.crossed.current_user);
+  }
+  if (data.leaf && typeof data.leaf.current_user === 'string') {
+    localStorage.setItem('ob_local_current_user', data.leaf.current_user);
+  }
+}
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 let _toastTimer;
@@ -561,9 +868,13 @@ function openUserForm(existing) {
 }
 
 // ── Logout / Change server ────────────────────────────────────────────────────
-document.getElementById('btn-switch-app').addEventListener('click', () => {
-  switchAppTarget('crossed-viper', CROSSED_VIPER_PACKAGE, TASKS_APP_URL);
-});
+if (IS_LOCAL_MODE) {
+  document.getElementById('btn-switch-app').classList.add('hidden');
+} else {
+  document.getElementById('btn-switch-app').addEventListener('click', () => {
+    switchAppTarget('crossed-viper', CROSSED_VIPER_PACKAGE, TASKS_APP_URL);
+  });
+}
 
 document.getElementById('btn-account').addEventListener('click', openAccountModal);
 document.getElementById('account-close').addEventListener('click', closeAccountModal);
@@ -573,9 +884,20 @@ function openAccountModal() {
   if (!currentUser) return;
   document.getElementById('acc-username').value = currentUser.username;
   document.getElementById('acc-password').value = '';
+  const pinInput = document.getElementById('acc-pin');
+  pinInput.value = '';
+  pinInput.placeholder = IS_LOCAL_MODE ? 'Leave blank to keep, type OFF to remove' : 'Available in local mode only';
+  pinInput.disabled = !IS_LOCAL_MODE;
+  // Hide username/password fields in local mode (PIN only)
+  document.getElementById('acc-username').closest('.field').style.display = IS_LOCAL_MODE ? 'none' : '';
+  document.getElementById('acc-password').closest('.field').style.display = IS_LOCAL_MODE ? 'none' : '';
   document.getElementById('account-error').classList.add('hidden');
   document.getElementById('modal-account').classList.remove('hidden');
-  document.getElementById('acc-username').focus();
+  if (IS_LOCAL_MODE) {
+    document.getElementById('acc-pin').focus();
+  } else {
+    document.getElementById('acc-username').focus();
+  }
 }
 
 function closeAccountModal() {
@@ -589,15 +911,27 @@ document.getElementById('account-save').addEventListener('click', async () => {
 
   const username = document.getElementById('acc-username').value.trim();
   const password = document.getElementById('acc-password').value;
-  if (!username) {
+  const pinRaw = document.getElementById('acc-pin').value.trim();
+  if (!IS_LOCAL_MODE && !username) {
     errEl.textContent = 'Username is required.';
     errEl.classList.remove('hidden');
     return;
   }
 
   const body = {};
-  if (username !== currentUser.username) body.username = username;
-  if (password) body.password = password;
+  if (!IS_LOCAL_MODE) {
+    if (username !== currentUser.username) body.username = username;
+    if (password) body.password = password;
+  }
+  if (IS_LOCAL_MODE && pinRaw) {
+    if (pinRaw.toUpperCase() === 'OFF') body.pin = '';
+    else if (isValidPin(pinRaw)) body.pin = pinRaw;
+    else {
+      errEl.textContent = 'PIN must be 4 to 8 digits (or OFF to remove).';
+      errEl.classList.remove('hidden');
+      return;
+    }
+  }
   if (Object.keys(body).length === 0) {
     closeAccountModal();
     return;
@@ -617,6 +951,38 @@ document.getElementById('account-save').addEventListener('click', async () => {
   }
 });
 
+document.getElementById('btn-export-local').addEventListener('click', () => {
+  try {
+    exportLocalBackup();
+    toast('Local backup exported');
+  } catch (e) {
+    toast(e.message, true);
+  }
+});
+
+document.getElementById('btn-import-local').addEventListener('click', () => {
+  const input = document.getElementById('import-local-file');
+  input.value = '';
+  input.click();
+});
+
+document.getElementById('import-local-file').addEventListener('change', async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!confirm('Replace local backup data with selected file contents?')) return;
+  try {
+    await importLocalBackup(file);
+    if (IS_LOCAL_MODE) {
+      currentUser = await api.me();
+      refreshUserLabel();
+      await loadAll();
+    }
+    toast('Local backup imported');
+  } catch (e) {
+    toast(e.message, true);
+  }
+});
+
 document.getElementById('btn-delete-account').addEventListener('click', async () => {
   if (!confirm('Delete your account permanently?')) return;
   try {
@@ -632,11 +998,15 @@ document.getElementById('btn-delete-account').addEventListener('click', async ()
 
 document.getElementById('btn-logout').addEventListener('click', () => {
   localStorage.removeItem('ob_token');
+  localStorage.removeItem('ob_auth_mode');
+  localStorage.removeItem('ob_local_current_user');
+  localStorage.removeItem('ob_server');
   globalThis.location.href = PATH_INDEX;
 });
 document.getElementById('btn-server').addEventListener('click', () => {
   const url = prompt('Server URL:', localStorage.getItem('ob_server') || '');
   if (url !== null) {
+    localStorage.setItem('ob_auth_mode', 'remote');
     localStorage.setItem('ob_server', url.trim().replace(/\/$/, ''));
     globalThis.location.reload();
   }

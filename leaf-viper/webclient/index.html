@@ -26,6 +26,9 @@
     </div>
     <p id="setup-error" class="error-msg hidden"></p>
     <button id="setup-btn" class="btn btn-primary btn-full">Connect</button>
+    <button id="local-account-btn" class="btn btn-ghost btn-full" style="margin-top:8px;font-size:.85rem">
+      Use local account (no server)
+    </button>
   </div>
 
   <!-- ── Login screen ────────────────────────────────────────────────────── -->
@@ -48,12 +51,16 @@
         <input id="password" type="password" autocomplete="current-password"
                placeholder="••••••" required />
       </div>
+      <div id="local-pin-wrap" class="field hidden">
+        <label for="local-pin">PIN</label>
+        <input id="local-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Enter your local PIN" />
+      </div>
       <p id="login-error" class="error-msg hidden"></p>
       <button type="submit" class="btn btn-primary btn-full" id="login-btn">
         Sign In
       </button>
     </form>
-    <p style="margin-top:10px;font-size:.82rem;color:#94a3b8;text-align:center">
+    <p id="register-hint" style="margin-top:10px;font-size:.82rem;color:#94a3b8;text-align:center">
       Don't have an account?
       <a id="register-link" href="/" style="color:#60a5fa;text-decoration:none">Register here</a>
     </p>
@@ -66,14 +73,56 @@
     </a>
   </div>
 
+  <div id="unlock-card" class="login-card hidden">
+    <div class="login-logo">
+      <img src="favicon.svg?v=20260330-icons-1" width="64" height="64" style="border-radius:14px" alt="Leaf Viper" />
+    </div>
+    <h1 class="login-title">Leaf Viper</h1>
+    <p id="unlock-user-label" class="login-sub">Local account is locked</p>
+    <div class="field">
+      <label for="unlock-pin">PIN</label>
+      <input id="unlock-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Enter PIN" />
+    </div>
+    <p id="unlock-error" class="error-msg hidden"></p>
+    <button id="unlock-btn" class="btn btn-primary btn-full">Unlock</button>
+    <button id="unlock-switch-btn" class="btn btn-ghost btn-full" style="margin-top:8px;font-size:.8rem">Use another account</button>
+  </div>
+
   <script>
+    const isCapacitor = typeof window.Capacitor !== 'undefined' ||
+                        window.location.origin === 'https://localhost' ||
+                        window.location.origin === 'capacitor://localhost';
+    const IS_DESKTOP      = window.location.hostname === '127.0.0.1';
+    const IS_LOCAL_CLIENT = IS_DESKTOP || isCapacitor;
+
     const SHOW_CHANGE_SERVER = window._SHOW_CHANGE_SERVER !== false;
     localStorage.setItem('ot_show_change_server', SHOW_CHANGE_SERVER ? '1' : '0');
     localStorage.setItem('ob_show_change_server', SHOW_CHANGE_SERVER ? '1' : '0');
     const serverUrl = () => (localStorage.getItem('ob_server') || '').replace(/\/$/, '');
+    const authMode = () => localStorage.getItem('ob_auth_mode') || 'remote';
+    let unlockUser = null;
+
+    function parseJson(key, fallback) {
+      try {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function setAuthMode(mode) {
+      localStorage.setItem('ob_auth_mode', mode);
+    }
+
+    function hideAllCards() {
+      document.getElementById('setup-card').classList.add('hidden');
+      document.getElementById('login-card').classList.add('hidden');
+      document.getElementById('unlock-card').classList.add('hidden');
+    }
 
     function showSetup(prefill) {
-      document.getElementById('login-card').classList.add('hidden');
+      hideAllCards();
       const card = document.getElementById('setup-card');
       card.classList.remove('hidden');
       const inp = document.getElementById('server-url');
@@ -82,39 +131,131 @@
     }
 
     function showLogin() {
-      document.getElementById('setup-card').classList.add('hidden');
+      hideAllCards();
       const card = document.getElementById('login-card');
       card.classList.remove('hidden');
-      document.getElementById('login-server-label').textContent = serverUrl();
+      const localMode = authMode() === 'local';
+      document.getElementById('login-server-label').textContent = localMode
+        ? 'Local account mode (this device only)'
+        : serverUrl();
+      const registerHint = document.getElementById('register-hint');
+      if (localMode) {
+        registerHint.textContent = 'Your local account will be created automatically on first sign in.';
+      } else {
+        registerHint.innerHTML = 'Don\'t have an account? <a id="register-link" href="/" style="color:#60a5fa;text-decoration:none">Register here</a>';
+        const newRegisterLink = document.getElementById('register-link');
+        newRegisterLink.href = serverUrl() ? serverUrl().replace(/\/$/, '') + '/' : '/';
+      }
+      document.getElementById('local-pin-wrap').classList.toggle('hidden', !localMode);
+      document.getElementById('local-pin').value = '';
       document.getElementById('username').focus();
     }
 
-    // ── Boot ──────────────────────────────────────────────────────────────────
-    // On Capacitor/Android, window.location.origin is "https://localhost" — NOT the server
-    const isCapacitor = typeof window.Capacitor !== 'undefined' ||
-                        window.location.origin === 'https://localhost' ||
-                        window.location.origin === 'capacitor://localhost';
+    function showUnlock(user) {
+      hideAllCards();
+      unlockUser = user;
+      document.getElementById('unlock-card').classList.remove('hidden');
+      document.getElementById('unlock-user-label').textContent = 'Local account is locked';
+      document.getElementById('unlock-error').classList.add('hidden');
+      document.getElementById('unlock-pin').value = '';
+      document.getElementById('unlock-pin').focus();
+    }
 
-    // Clear stale value saved by old builds on Capacitor
+    function enterLocalMode() {
+      const users = parseJson('ob_local_users', []);
+      let user = users.find(u => u.id === 1);
+      if (!user) {
+        user = { id: 1, username: 'local', is_admin: true, created_at: new Date().toISOString() };
+        users.push(user);
+        localStorage.setItem('ob_local_users', JSON.stringify(users));
+      }
+      localStorage.setItem('ob_local_current_user', '1');
+      if (user.pin) {
+        showUnlock(user);
+      } else {
+        localStorage.setItem('ob_token', 'local:1');
+        globalThis.location.href = IS_LOCAL_CLIENT ? 'app.html' : '/leaf-viper/app.html';
+      }
+    }
+
+    async function migrateLocalDataToServer(baseUrl, token, username) {
+      const authHeaders = {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+      const request = async (method, path, body) => {
+        const res = await fetch(`${baseUrl}${path}`, {
+          method,
+          headers: authHeaders,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        if (!res.ok) {
+          const detail = await res.text().catch(() => '');
+          throw new Error(`${method} ${path} failed (${res.status}) ${detail}`.trim());
+        }
+        if (res.status === 204) return null;
+        return res.json();
+      };
+
+      const marker = `${baseUrl}|${username}`;
+
+      if (localStorage.getItem('ob_local_migrated_marker') !== marker) {
+        const users = parseJson('ob_local_users', []);
+        const localUser = users[0];
+        if (localUser) {
+          const localIncomes = parseJson('ob_local_incomes', []).filter(e => e.user_id === localUser.id);
+          const localExpenses = parseJson('ob_local_expenses', []).filter(e => e.user_id === localUser.id);
+          for (const income of localIncomes) {
+            await request('POST', '/finance/incomes', {
+              name: income.name,
+              description: income.description ?? null,
+              amount: income.amount,
+              date: income.date,
+            });
+          }
+          for (const expense of localExpenses) {
+            await request('POST', '/finance/expenses', {
+              name: expense.name,
+              description: expense.description ?? null,
+              amount: expense.amount,
+              date: expense.date,
+            });
+          }
+          localStorage.setItem('ob_local_migrated_marker', marker);
+        }
+      }
+    }
+
     if (isCapacitor && localStorage.getItem('ob_server') === window.location.origin) {
       localStorage.removeItem('ob_server');
     }
 
-    if (localStorage.getItem('ob_token')) {
-      window.location.href = isCapacitor ? 'app.html' : '/leaf-viper/app.html';
-    } else if (!serverUrl()) {
-      if (isCapacitor) {
-        showSetup();
+    const currentToken = localStorage.getItem('ob_token');
+    if (currentToken) {
+      if (currentToken.startsWith('local:')) {
+        const localUserId = Number.parseInt(currentToken.slice(6), 10);
+        const users = parseJson('ob_local_users', []);
+        const user = users.find(u => u.id === localUserId);
+        if (!user) {
+          localStorage.removeItem('ob_token');
+          localStorage.removeItem('ob_local_current_user');
+          showLogin();
+        } else if (user.pin) {
+          showUnlock(user);
+        } else {
+          globalThis.location.href = IS_LOCAL_CLIENT ? 'app.html' : '/leaf-viper/app.html';
+        }
       } else {
-        // Web browser — same-server deployment, use current origin
-        localStorage.setItem('ob_server', window.location.origin);
-        showLogin();
+        globalThis.location.href = IS_LOCAL_CLIENT ? 'app.html' : '/leaf-viper/app.html';
       }
+    } else if (authMode() === 'local') {
+      enterLocalMode();
+    } else if (!serverUrl()) {
+      showSetup();
     } else {
       showLogin();
     }
 
-    // ── Setup form ────────────────────────────────────────────────────────────
     document.getElementById('setup-btn').addEventListener('click', async () => {
       const errEl = document.getElementById('setup-error');
       const btn   = document.getElementById('setup-btn');
@@ -129,6 +270,7 @@
           body: 'username=_probe_&password=_probe_' });
         if (res.status === 422 || res.status === 401 || res.status === 200) {
           localStorage.setItem('ob_server', url);
+          setAuthMode('remote');
           showLogin();
         } else {
           throw new Error(`Unexpected status: ${res.status}`);
@@ -142,7 +284,6 @@
       }
     });
 
-    // ── Login form ────────────────────────────────────────────────────────────
     document.getElementById('login-form').addEventListener('submit', async e => {
       e.preventDefault();
       const errEl = document.getElementById('login-error');
@@ -150,6 +291,8 @@
       errEl.classList.add('hidden');
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
+      const pin = document.getElementById('local-pin').value.trim();
+      const localMode = authMode() === 'local';
       if (!username || !password) {
         errEl.textContent = 'Please enter your username and password.';
         errEl.classList.remove('hidden');
@@ -158,6 +301,32 @@
       btn.disabled = true;
       btn.textContent = 'Signing in...';
       try {
+        if (localMode) {
+          const users = parseJson('ob_local_users', []);
+          let user = users.find(u => u.username === username);
+          if (!user) {
+            const nextId = users.reduce((m, u) => Math.max(m, Number(u.id) || 0), 0) + 1;
+            user = {
+              id: nextId,
+              username,
+              password,
+              is_admin: false,
+              created_at: new Date().toISOString(),
+            };
+            users.push(user);
+            localStorage.setItem('ob_local_users', JSON.stringify(users));
+          } else if (user.password !== password) {
+            throw new Error('Incorrect username or password');
+          }
+          if (user.pin && user.pin !== pin) {
+            throw new Error('Incorrect PIN');
+          }
+          localStorage.setItem('ob_local_current_user', String(user.id));
+          localStorage.setItem('ob_token', `local:${user.id}`);
+          globalThis.location.href = IS_LOCAL_CLIENT ? 'app.html' : '/leaf-viper/app.html';
+          return;
+        }
+
         const res = await fetch(`${serverUrl()}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -168,8 +337,13 @@
           throw new Error(j.detail || `Error ${res.status}`);
         }
         const { access_token } = await res.json();
+        await migrateLocalDataToServer(serverUrl(), access_token, username);
+        localStorage.setItem('ob_server', serverUrl());
+        localStorage.setItem('ot_server', serverUrl());
+        localStorage.setItem('ot_auth_mode', 'remote');
+        localStorage.setItem('ob_auth_mode', 'remote');
         localStorage.setItem('ob_token', access_token);
-        window.location.href = isCapacitor ? 'app.html' : '/leaf-viper/app.html';
+        globalThis.location.href = IS_LOCAL_CLIENT ? 'app.html' : '/leaf-viper/app.html';
       } catch (e) {
         errEl.textContent = e.message;
         errEl.classList.remove('hidden');
@@ -179,7 +353,45 @@
       }
     });
 
-    document.getElementById('change-server-btn').addEventListener('click', () => showSetup(serverUrl()));
+    document.getElementById('change-server-btn').addEventListener('click', () => {
+      setAuthMode('remote');
+      showSetup(serverUrl());
+    });
+
+    document.getElementById('local-account-btn').addEventListener('click', () => {
+      setAuthMode('local');
+      enterLocalMode();
+    });
+
+    if (!IS_LOCAL_CLIENT) {
+      document.getElementById('local-account-btn').style.display = 'none';
+    }
+
+    document.getElementById('unlock-btn').addEventListener('click', () => {
+      const errEl = document.getElementById('unlock-error');
+      errEl.classList.add('hidden');
+      const pin = document.getElementById('unlock-pin').value.trim();
+      if (!unlockUser || pin !== unlockUser.pin) {
+        errEl.textContent = 'Incorrect PIN.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      localStorage.setItem('ob_token', `local:${unlockUser.id}`);
+      localStorage.setItem('ob_local_current_user', String(unlockUser.id));
+      globalThis.location.href = IS_LOCAL_CLIENT ? 'app.html' : '/leaf-viper/app.html';
+    });
+
+    document.getElementById('unlock-pin').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('unlock-btn').click();
+    });
+
+    document.getElementById('unlock-switch-btn').addEventListener('click', () => {
+      localStorage.removeItem('ob_token');
+      localStorage.removeItem('ob_local_current_user');
+      setAuthMode('remote');
+      if (serverUrl()) showLogin();
+      else showSetup();
+    });
 
     if (!SHOW_CHANGE_SERVER) {
       document.getElementById('change-server-btn').style.display = 'none';
@@ -213,11 +425,8 @@
           globalThis.location.href = tasksUrl;
         }
       });
-      const registerLink = document.getElementById('register-link');
-      registerLink.href = serverUrl() ? serverUrl().replace(/\/$/, '') + '/' : '/';
     })();
 
-    // ── Theme toggle ──────────────────────────────────────────────────────────
     (function() {
       const btn = document.getElementById('btn-theme');
       function updateBtn() {

@@ -1,18 +1,24 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const API = (localStorage.getItem('ot_server') || 'http://localhost:8000').replace(/\/$/, '');
+const API = (localStorage.getItem('ot_server') || '').replace(/\/$/, '');
+const IS_LOCAL_MODE = localStorage.getItem('ot_auth_mode') === 'local';
 
 // Capacitor (Android) serves files from https://localhost — detect it so that
 // internal redirects use relative paths instead of /crossed-viper/…
 const _CAP      = globalThis.Capacitor !== undefined ||
                   globalThis.location.origin === 'https://localhost' ||
                   globalThis.location.origin === 'capacitor://localhost';
-const PATH_INDEX = _CAP ? 'index.html' : '/crossed-viper/';
+const _DESKTOP   = globalThis.location.hostname === '127.0.0.1';
+const _LOCAL_CLIENT = _CAP || _DESKTOP;
+const PATH_INDEX = _LOCAL_CLIENT ? 'index.html' : '/crossed-viper/';
 const SHOW_CHANGE_SERVER =
   globalThis._SHOW_CHANGE_SERVER !== false &&
   localStorage.getItem('ot_show_change_server') !== '0';
-const BUDGET_APP_URL = _CAP ? `${API}/leaf-viper/` : '/leaf-viper/';
+let BUDGET_APP_URL = '/leaf-viper/';
+if (_LOCAL_CLIENT && !IS_LOCAL_MODE) {
+  BUDGET_APP_URL = `${API}/leaf-viper/`;
+}
 const LEAF_VIPER_PACKAGE = 'com.leafviper.app';
 
 async function switchAppTarget(target, androidPackage, fallbackUrl) {
@@ -86,26 +92,291 @@ async function apiFetch(method, path, body = null) {
   return res.json();
 }
 
-const api = {
-  me:           ()             => apiFetch('GET',    '/auth/me'),
-  updateMe:     body          => apiFetch('PATCH',  '/users/me', body),
-  deleteMe:     ()            => apiFetch('DELETE', '/users/me'),
-  // lists
-  getLists:     ()             => apiFetch('GET',    '/lists'),
-  createList:   body          => apiFetch('POST',   '/lists', body),
-  updateList:   (id, body)    => apiFetch('PATCH',  `/lists/${id}`, body),
-  deleteList:   id            => apiFetch('DELETE', `/lists/${id}`),
-  // tasks
-  getTasks:     lid           => apiFetch('GET',    `/lists/${lid}/tasks`),
-  createTask:   (lid, body)   => apiFetch('POST',   `/lists/${lid}/tasks`, body),
-  updateTask:   (lid, tid, b) => apiFetch('PATCH',  `/lists/${lid}/tasks/${tid}`, b),
-  deleteTask:   (lid, tid)    => apiFetch('DELETE', `/lists/${lid}/tasks/${tid}`),
-  // admin
-  getUsers:     ()            => apiFetch('GET',    '/users'),
-  createUser:   body          => apiFetch('POST',   '/users', body),
-  updateUser:   (id, body)    => apiFetch('PATCH',  `/users/${id}`, body),
-  deleteUser:   id            => apiFetch('DELETE', `/users/${id}`),
-};
+function getLocalJson(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setLocalJson(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function getLocalCurrentUserId() {
+  const tokenUserId = String(token || '').startsWith('local:')
+    ? Number.parseInt(String(token).slice(6), 10)
+    : Number.parseInt(localStorage.getItem('ot_local_current_user') || '', 10);
+  return Number.isNaN(tokenUserId) ? null : tokenUserId;
+}
+
+function requireLocalUser() {
+  const userId = getLocalCurrentUserId();
+  if (!userId) {
+    localStorage.removeItem('ot_token');
+    globalThis.location.href = PATH_INDEX;
+    throw new Error('Not authenticated');
+  }
+  const users = getLocalJson('ot_local_users', []);
+  const user = users.find(u => u.id === userId);
+  if (!user) {
+    localStorage.removeItem('ot_token');
+    globalThis.location.href = PATH_INDEX;
+    throw new Error('User not found');
+  }
+  return { user, users };
+}
+
+function localPublicUser(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    is_admin: !!user.is_admin,
+    created_at: user.created_at,
+  };
+}
+
+function isValidPin(pin) {
+  return /^\d{4,8}$/.test(pin);
+}
+
+function nextId(items) {
+  return items.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
+}
+
+function localApiNotSupported() {
+  throw new Error('Admin features are not available in local account mode.');
+}
+
+function createLocalApi() {
+  const byId = (id) => Number.parseInt(String(id), 10);
+  return {
+    me: async () => {
+      const { user } = requireLocalUser();
+      return localPublicUser(user);
+    },
+    updateMe: async (body) => {
+      const { user, users } = requireLocalUser();
+      if (body.username) {
+        const conflict = users.find(u => u.username === body.username && u.id !== user.id);
+        if (conflict) throw new Error('Username already taken');
+        user.username = body.username;
+      }
+      if (body.password) user.password = body.password;
+      if (body.pin !== undefined) {
+        if (body.pin === '') {
+          delete user.pin;
+        } else if (isValidPin(body.pin)) {
+          user.pin = body.pin;
+        } else {
+          throw new Error('PIN must be 4 to 8 digits.');
+        }
+      }
+      setLocalJson('ot_local_users', users);
+      return localPublicUser(user);
+    },
+    deleteMe: async () => {
+      const { user, users } = requireLocalUser();
+      const nextUsers = users.filter(u => u.id !== user.id);
+      const listsStore = getLocalJson('ot_local_lists', []);
+      const tasksStore = getLocalJson('ot_local_tasks', []);
+      const ownedLists = new Set(listsStore.filter(l => l.owner_id === user.id).map(l => l.id));
+      setLocalJson('ot_local_users', nextUsers);
+      setLocalJson('ot_local_lists', listsStore.filter(l => l.owner_id !== user.id));
+      setLocalJson('ot_local_tasks', tasksStore.filter(t => !ownedLists.has(t.list_id)));
+      localStorage.removeItem('ot_token');
+      localStorage.removeItem('ot_local_current_user');
+      return null;
+    },
+    getLists: async () => {
+      const { user } = requireLocalUser();
+      const store = getLocalJson('ot_local_lists', []);
+      return store.filter(l => l.owner_id === user.id).sort((a, b) => a.id - b.id);
+    },
+    createList: async (body) => {
+      const { user } = requireLocalUser();
+      const store = getLocalJson('ot_local_lists', []);
+      const item = {
+        id: nextId(store),
+        title: body.title,
+        description: body.description ?? null,
+        owner_id: user.id,
+      };
+      store.push(item);
+      setLocalJson('ot_local_lists', store);
+      return item;
+    },
+    updateList: async (id, body) => {
+      const { user } = requireLocalUser();
+      const listId = byId(id);
+      const store = getLocalJson('ot_local_lists', []);
+      const item = store.find(l => l.id === listId && l.owner_id === user.id);
+      if (!item) throw new Error('List not found');
+      if (body.title !== undefined) item.title = body.title;
+      if (body.description !== undefined) item.description = body.description;
+      setLocalJson('ot_local_lists', store);
+      return item;
+    },
+    deleteList: async (id) => {
+      const { user } = requireLocalUser();
+      const listId = byId(id);
+      const store = getLocalJson('ot_local_lists', []);
+      const exists = store.some(l => l.id === listId && l.owner_id === user.id);
+      if (!exists) throw new Error('List not found');
+      setLocalJson('ot_local_lists', store.filter(l => !(l.id === listId && l.owner_id === user.id)));
+      const tasksStore = getLocalJson('ot_local_tasks', []);
+      setLocalJson('ot_local_tasks', tasksStore.filter(t => t.list_id !== listId));
+      return null;
+    },
+    getTasks: async (lid) => {
+      const { user } = requireLocalUser();
+      const listId = byId(lid);
+      const listsStore = getLocalJson('ot_local_lists', []);
+      const owned = listsStore.some(l => l.id === listId && l.owner_id === user.id);
+      if (!owned) throw new Error('List not found');
+      const tasksStore = getLocalJson('ot_local_tasks', []);
+      return tasksStore.filter(t => t.list_id === listId).sort((a, b) => a.id - b.id);
+    },
+    createTask: async (lid, body) => {
+      const { user } = requireLocalUser();
+      const listId = byId(lid);
+      const listsStore = getLocalJson('ot_local_lists', []);
+      const owned = listsStore.some(l => l.id === listId && l.owner_id === user.id);
+      if (!owned) throw new Error('List not found');
+      const tasksStore = getLocalJson('ot_local_tasks', []);
+      const task = {
+        id: nextId(tasksStore),
+        list_id: listId,
+        title: body.title,
+        description: body.description ?? null,
+        completed: !!body.completed,
+        finance_type: body.finance_type ?? null,
+        finance_amount: body.finance_amount ?? null,
+      };
+      tasksStore.push(task);
+      setLocalJson('ot_local_tasks', tasksStore);
+      return task;
+    },
+    updateTask: async (lid, tid, body) => {
+      const { user } = requireLocalUser();
+      const listId = byId(lid);
+      const taskId = byId(tid);
+      const listsStore = getLocalJson('ot_local_lists', []);
+      const owned = listsStore.some(l => l.id === listId && l.owner_id === user.id);
+      if (!owned) throw new Error('List not found');
+      const tasksStore = getLocalJson('ot_local_tasks', []);
+      const task = tasksStore.find(t => t.id === taskId && t.list_id === listId);
+      if (!task) throw new Error('Task not found');
+      if (body.title !== undefined) task.title = body.title;
+      if (body.description !== undefined) task.description = body.description;
+      if (body.completed !== undefined) task.completed = !!body.completed;
+      if (body.finance_type !== undefined) task.finance_type = body.finance_type;
+      if (body.finance_amount !== undefined) task.finance_amount = body.finance_amount;
+      setLocalJson('ot_local_tasks', tasksStore);
+      return task;
+    },
+    deleteTask: async (lid, tid) => {
+      const { user } = requireLocalUser();
+      const listId = byId(lid);
+      const taskId = byId(tid);
+      const listsStore = getLocalJson('ot_local_lists', []);
+      const owned = listsStore.some(l => l.id === listId && l.owner_id === user.id);
+      if (!owned) throw new Error('List not found');
+      const tasksStore = getLocalJson('ot_local_tasks', []);
+      const exists = tasksStore.some(t => t.id === taskId && t.list_id === listId);
+      if (!exists) throw new Error('Task not found');
+      setLocalJson('ot_local_tasks', tasksStore.filter(t => !(t.id === taskId && t.list_id === listId)));
+      return null;
+    },
+    getUsers: async () => localApiNotSupported(),
+    createUser: async () => localApiNotSupported(),
+    updateUser: async () => localApiNotSupported(),
+    deleteUser: async () => localApiNotSupported(),
+  };
+}
+
+const api = IS_LOCAL_MODE
+  ? createLocalApi()
+  : {
+      me:           ()             => apiFetch('GET',    '/auth/me'),
+      updateMe:     body          => apiFetch('PATCH',  '/users/me', body),
+      deleteMe:     ()            => apiFetch('DELETE', '/users/me'),
+      // lists
+      getLists:     ()             => apiFetch('GET',    '/lists'),
+      createList:   body          => apiFetch('POST',   '/lists', body),
+      updateList:   (id, body)    => apiFetch('PATCH',  `/lists/${id}`, body),
+      deleteList:   id            => apiFetch('DELETE', `/lists/${id}`),
+      // tasks
+      getTasks:     lid           => apiFetch('GET',    `/lists/${lid}/tasks`),
+      createTask:   (lid, body)   => apiFetch('POST',   `/lists/${lid}/tasks`, body),
+      updateTask:   (lid, tid, b) => apiFetch('PATCH',  `/lists/${lid}/tasks/${tid}`, b),
+      deleteTask:   (lid, tid)    => apiFetch('DELETE', `/lists/${lid}/tasks/${tid}`),
+      // admin
+      getUsers:     ()            => apiFetch('GET',    '/users'),
+      createUser:   body          => apiFetch('POST',   '/users', body),
+      updateUser:   (id, body)    => apiFetch('PATCH',  `/users/${id}`, body),
+      deleteUser:   id            => apiFetch('DELETE', `/users/${id}`),
+    };
+
+function buildLocalBackup() {
+  return {
+    version: 1,
+    exported_at: new Date().toISOString(),
+    crossed: {
+      users: getLocalJson('ot_local_users', []),
+      lists: getLocalJson('ot_local_lists', []),
+      tasks: getLocalJson('ot_local_tasks', []),
+      current_user: localStorage.getItem('ot_local_current_user') || null,
+    },
+    leaf: {
+      users: getLocalJson('ob_local_users', []),
+      incomes: getLocalJson('ob_local_incomes', []),
+      expenses: getLocalJson('ob_local_expenses', []),
+      current_user: localStorage.getItem('ob_local_current_user') || null,
+    },
+  };
+}
+
+function exportLocalBackup() {
+  const backup = buildLocalBackup();
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `opentask-local-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function applyImportedArray(payload, path, key) {
+  if (payload[path] && Array.isArray(payload[path][key])) {
+    setLocalJson(`${path === 'crossed' ? 'ot' : 'ob'}_local_${key}`, payload[path][key]);
+  }
+}
+
+async function importLocalBackup(file) {
+  const text = await file.text();
+  const data = JSON.parse(text);
+  if (!data || typeof data !== 'object') throw new Error('Invalid backup file format.');
+
+  applyImportedArray(data, 'crossed', 'users');
+  applyImportedArray(data, 'crossed', 'lists');
+  applyImportedArray(data, 'crossed', 'tasks');
+  applyImportedArray(data, 'leaf', 'users');
+  applyImportedArray(data, 'leaf', 'incomes');
+  applyImportedArray(data, 'leaf', 'expenses');
+
+  if (data.crossed && typeof data.crossed.current_user === 'string') {
+    localStorage.setItem('ot_local_current_user', data.crossed.current_user);
+  }
+  if (data.leaf && typeof data.leaf.current_user === 'string') {
+    localStorage.setItem('ob_local_current_user', data.leaf.current_user);
+  }
+}
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 let _toastTimer;
@@ -195,13 +466,18 @@ document.getElementById('sidebar-backdrop').addEventListener('click', closeSideb
 })();
 
 // ── App switch ───────────────────────────────────────────────────────────────
-document.getElementById('btn-switch-app').addEventListener('click', () => {
-  switchAppTarget('leaf-viper', LEAF_VIPER_PACKAGE, BUDGET_APP_URL);
-});
-document.getElementById('btn-switch-app-sidebar').addEventListener('click', () => {
-  closeSidebar();
-  switchAppTarget('leaf-viper', LEAF_VIPER_PACKAGE, BUDGET_APP_URL);
-});
+if (IS_LOCAL_MODE) {
+  document.getElementById('btn-switch-app').classList.add('hidden');
+  document.getElementById('btn-switch-app-sidebar').classList.add('hidden');
+} else {
+  document.getElementById('btn-switch-app').addEventListener('click', () => {
+    switchAppTarget('leaf-viper', LEAF_VIPER_PACKAGE, BUDGET_APP_URL);
+  });
+  document.getElementById('btn-switch-app-sidebar').addEventListener('click', () => {
+    closeSidebar();
+    switchAppTarget('leaf-viper', LEAF_VIPER_PACKAGE, BUDGET_APP_URL);
+  });
+}
 
 // ── My account ───────────────────────────────────────────────────────────────
 document.getElementById('btn-account').addEventListener('click', openAccountModal);
@@ -217,9 +493,20 @@ function openAccountModal() {
   if (!currentUser) { toast('Loading user info, please try again.', true); return; }
   document.getElementById('acc-username').value = currentUser.username;
   document.getElementById('acc-password').value = '';
+  const pinInput = document.getElementById('acc-pin');
+  pinInput.value = '';
+  pinInput.placeholder = IS_LOCAL_MODE ? 'Leave blank to keep, type OFF to remove' : 'Available in local mode only';
+  pinInput.disabled = !IS_LOCAL_MODE;
+  // Hide username/password fields in local mode (PIN only)
+  document.getElementById('acc-username').closest('.field').style.display = IS_LOCAL_MODE ? 'none' : '';
+  document.getElementById('acc-password').closest('.field').style.display = IS_LOCAL_MODE ? 'none' : '';
   document.getElementById('account-error').classList.add('hidden');
   document.getElementById('modal-account').classList.remove('hidden');
-  document.getElementById('acc-username').focus();
+  if (IS_LOCAL_MODE) {
+    document.getElementById('acc-pin').focus();
+  } else {
+    document.getElementById('acc-username').focus();
+  }
 }
 
 function closeAccountModal() {
@@ -233,15 +520,27 @@ document.getElementById('account-save').addEventListener('click', async () => {
 
   const username = document.getElementById('acc-username').value.trim();
   const password = document.getElementById('acc-password').value;
-  if (!username) {
+  const pinRaw = document.getElementById('acc-pin').value.trim();
+  if (!IS_LOCAL_MODE && !username) {
     errEl.textContent = 'Username is required.';
     errEl.classList.remove('hidden');
     return;
   }
 
   const body = {};
-  if (username !== currentUser.username) body.username = username;
-  if (password) body.password = password;
+  if (!IS_LOCAL_MODE) {
+    if (username !== currentUser.username) body.username = username;
+    if (password) body.password = password;
+  }
+  if (IS_LOCAL_MODE && pinRaw) {
+    if (pinRaw.toUpperCase() === 'OFF') body.pin = '';
+    else if (isValidPin(pinRaw)) body.pin = pinRaw;
+    else {
+      errEl.textContent = 'PIN must be 4 to 8 digits (or OFF to remove).';
+      errEl.classList.remove('hidden');
+      return;
+    }
+  }
   if (Object.keys(body).length === 0) {
     closeAccountModal();
     return;
@@ -258,6 +557,38 @@ document.getElementById('account-save').addEventListener('click', async () => {
     errEl.classList.remove('hidden');
   } finally {
     saveBtn.disabled = false;
+  }
+});
+
+document.getElementById('btn-export-local').addEventListener('click', () => {
+  try {
+    exportLocalBackup();
+    toast('Local backup exported');
+  } catch (e) {
+    toast(e.message, true);
+  }
+});
+
+document.getElementById('btn-import-local').addEventListener('click', () => {
+  const input = document.getElementById('import-local-file');
+  input.value = '';
+  input.click();
+});
+
+document.getElementById('import-local-file').addEventListener('change', async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!confirm('Replace local backup data with selected file contents?')) return;
+  try {
+    await importLocalBackup(file);
+    if (IS_LOCAL_MODE) {
+      currentUser = await api.me();
+      refreshUserLabel();
+      await loadLists();
+    }
+    toast('Local backup imported');
+  } catch (e) {
+    toast(e.message, true);
   }
 });
 
@@ -679,10 +1010,14 @@ function openUserForm(existing) {
 // ── Logout ─────────────────────────────────────────────────────────────────────
 document.getElementById('btn-logout').addEventListener('click', () => {
   localStorage.removeItem('ot_token');
+  localStorage.removeItem('ot_auth_mode');
+  localStorage.removeItem('ot_local_current_user');
   globalThis.location.href = PATH_INDEX;
 });
 document.getElementById('btn-logout-sidebar').addEventListener('click', () => {
   localStorage.removeItem('ot_token');
+  localStorage.removeItem('ot_auth_mode');
+  localStorage.removeItem('ot_local_current_user');
   globalThis.location.href = PATH_INDEX;
 });
 
@@ -690,6 +1025,7 @@ document.getElementById('btn-logout-sidebar').addEventListener('click', () => {
 function changeServer() {
   localStorage.removeItem('ot_token');
   localStorage.removeItem('ot_server');
+  localStorage.setItem('ot_auth_mode', 'remote');
   globalThis.location.href = PATH_INDEX;
 }
 document.getElementById('btn-server').addEventListener('click', changeServer);

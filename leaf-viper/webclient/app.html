@@ -178,6 +178,15 @@
         <label for="acc-password">New Password <span style="font-weight:400;color:#9ca3af">(blank = keep current)</span></label>
         <input id="acc-password" type="password" />
       </div>
+      <div class="field">
+        <label for="acc-pin">Local PIN <span style="font-weight:400;color:#9ca3af">(4-8 digits, local mode only)</span></label>
+        <input id="acc-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Leave blank to keep" />
+      </div>
+      <div class="field" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="btn-export-local" type="button" class="btn btn-ghost">Export Local Backup</button>
+        <button id="btn-import-local" type="button" class="btn btn-ghost">Import Local Backup</button>
+        <input id="import-local-file" type="file" accept="application/json" class="hidden" />
+      </div>
       <p id="account-error" class="error-msg hidden"></p>
       <div class="modal-footer" style="justify-content:space-between">
         <button id="btn-delete-account" class="icon-only-btn" title="Delete account" aria-label="Delete account">🗑️</button>

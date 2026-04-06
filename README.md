@@ -33,6 +33,8 @@ A self-hosted task and budget management suite. Run it with a single `docker com
 **General**
 - Responsive web UI — works on desktop and mobile browsers
 - Fully self-hosted with PostgreSQL for persistent storage
+- Local account mode with PIN lock is available only on Desktop and Android clients
+- Local account mode is single-user and PIN-only (no username/password)
 - Native desktop wrappers for Linux and Windows
 - Android apps built with Capacitor
 
@@ -210,7 +212,12 @@ viper-suite/
 
 ## Desktop & Mobile Clients
 
-All clients connect to your own running Viper Suite server — they do **not** include a bundled backend. The full source for every client is in this repository.
+Running a Viper Suite server is recommended to get the full experience — shared accounts, automatic budget entries from completed finance tasks, and access from any client. Desktop and Android apps can also run in local account mode as an alternative, storing all data on the device without any backend. The full source for every client is in this repository.
+
+Local account mode notes:
+- Available only in Desktop and Android clients
+- Not available in web browser clients
+- Single local user per device, unlocked with PIN
 
 ### Desktop (Linux)
 

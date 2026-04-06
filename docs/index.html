@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Viper Suite</title>
   <link rel="icon" type="image/png" href="icon-256.png" />
-  <meta name="description" content="Viper Suite is an open-source and transparent productivity suite. Use the official cloud-hosted app or self-host it yourself with the same codebase." />
+  <meta name="description" content="Viper Suite is an open-source and transparent productivity suite. Self-host it with the same codebase on local, private, or cloud infrastructure." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -304,6 +304,7 @@
       box-shadow: var(--shadow-h);
     }
     .client-icon { font-size: 2rem; margin-bottom: .6rem; }
+    .client-icon-img { width: 2.5rem; height: 2.5rem; object-fit: contain; margin-bottom: .6rem; }
     .client-card h4 { font-size: .95rem; font-weight: 700; margin-bottom: .3rem; }
     .client-card p  { font-size: .8rem; color: var(--sub); }
 
@@ -374,7 +375,7 @@
       content: "• ";
       color: var(--text);
     }
-    .hosting-card.hosted {
+    .hosting-card.primary {
       border-color: rgba(37,99,235,.35);
       background: linear-gradient(170deg, var(--blue-l), var(--card) 40%);
     }
@@ -496,7 +497,6 @@
     <a href="#patreon">Patreon</a>
     <a href="#serpens-tech">Serpens Tech</a>
     <a href="#contact">Contact</a>
-    <a href="http://localhost:8000" class="btn-gh">Open App</a>
     <a href="https://github.com/serpens-tech/viper-suite" class="btn-gh">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
       GitHub
@@ -507,11 +507,10 @@
 <!-- ── Hero ─────────────────────────────────────────────────────────── -->
 <section style="padding: 0;">
   <div class="hero">
-    <h1>Open source.<br>Transparent by design.<br><span class="purple">Ready in the cloud.</span></h1>
-    <p><strong>Viper Suite</strong> is built around open-source transparency first: inspect the code, verify behavior, and deploy your way. Use our official hosted cloud app for instant access, or self-host when you need full infrastructure control.</p>
+    <h1>Open source.<br>Transparent by design.<br><span class="purple">Ready on your server.</span></h1>
+    <p><strong>Viper Suite</strong> is built around open-source transparency first: inspect the code, verify behavior, and deploy your way. Run it on your own infrastructure with full control over data and operations.</p>
     <div class="hero-cta">
-      <a href="http://localhost:8000" class="btn-primary">Open Hosted App</a>
-      <a href="https://github.com/serpens-tech/viper-suite" class="btn-secondary">View Source on GitHub</a>
+      <a href="https://github.com/serpens-tech/viper-suite" class="btn-primary">Open Project on GitHub</a>
       <a href="#quickstart" class="btn-secondary">Quick Start</a>
     </div>
 
@@ -524,7 +523,7 @@
 <span class="cmnt"># start everything</span>
 <span class="cmd">docker compose up -d</span>
 
-<span class="cmnt"># open in browser → http://localhost:8000</span></pre>
+<span class="cmnt"># then follow README for access and setup details</span></pre>
     </div>
   </div>
 </section>
@@ -534,7 +533,7 @@
   <div class="section-inner">
     <div class="section-label">Two apps, one server</div>
     <h2>Everything you need to stay organised</h2>
-    <p class="section-sub">Viper Suite ships with two apps that share one backend and database, whether you use the hosted cloud version or self-host your own deployment.</p>
+    <p class="section-sub">Viper Suite ships with two apps that share one backend and database in a fully self-hosted setup.</p>
 
     <div class="app-cards">
       <div class="app-card purple">
@@ -580,62 +579,24 @@
   <div class="section-inner">
     <div class="section-label">Available on</div>
     <h2>Web, Desktop & Android</h2>
-    <p class="section-sub">All clients can connect to the hosted cloud app or your own deployment. Build from source anytime — the full code is public.</p>
+    <p class="section-sub">All clients connect to your own deployment. Build from source anytime — the full code is public.</p>
 
     <div class="client-grid">
       <div class="client-card">
         <div class="client-icon">🌐</div>
         <h4>Web</h4>
-        <p>Works in any modern browser. No install needed.</p>
       </div>
       <div class="client-card">
-        <div class="client-icon">🐧</div>
+        <img src="Debian_logo.png" alt="Linux" class="client-icon-img" />
         <h4>Linux</h4>
-        <p>Native <code>.deb</code> installer for Debian/Ubuntu.</p>
       </div>
       <div class="client-card">
-        <div class="client-icon">🪟</div>
+        <img src="windows.png" alt="Windows" class="client-icon-img" />
         <h4>Windows</h4>
-        <p>PyInstaller <code>.exe</code> with optional Inno Setup installer.</p>
       </div>
       <div class="client-card">
-        <div class="client-icon">🤖</div>
+        <img src="android.png" alt="Android" class="client-icon-img" />
         <h4>Android</h4>
-        <p>Capacitor-based APK. Build with Android Studio.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── Hosting ───────────────────────────────────────────────────────── -->
-<section id="hosting">
-  <div class="section-inner">
-    <div class="section-label">Deployment Options</div>
-    <h2>Cloud-hosted first, self-host if you want</h2>
-    <p class="section-sub">Primary path: use the hosted cloud app for speed. Optional path: self-host with the exact same open-source code when you need it.</p>
-
-    <div class="hosting-grid">
-      <div class="hosting-card hosted">
-        <span class="hosting-tag">Recommended</span>
-        <h3>Official Hosted Viper Suite</h3>
-        <p>Use the hosted cloud instance maintained by the Viper Suite team and start in seconds with no infrastructure setup.</p>
-        <ul class="hosting-list">
-          <li>No infrastructure setup required</li>
-          <li>Fast onboarding for users and teams</li>
-          <li>Same open-source apps and feature set</li>
-        </ul>
-        <p style="margin-top:.85rem"><a href="http://localhost:8000" class="btn-primary" style="display:inline-flex">Open Hosted App</a></p>
-      </div>
-
-      <div class="hosting-card self">
-        <span class="hosting-tag">Optional</span>
-        <h3>Self-Host on Your Own Server</h3>
-        <p>Deploy with Docker on your own infrastructure whenever you need custom operations, networking, or internal-only access.</p>
-        <ul class="hosting-list">
-          <li>Run locally, on-prem, or in your private cloud</li>
-          <li>Apache 2.0-licensed source code with full transparency</li>
-          <li>No vendor lock-in, migrate whenever you want</li>
-        </ul>
       </div>
     </div>
   </div>
@@ -644,9 +605,11 @@
 <!-- ── Quick Start ───────────────────────────────────────────────────── -->
 <section id="quickstart">
   <div class="section-inner">
-    <div class="section-label">Self-Host Setup (Optional)</div>
+    <div class="section-label">Self-Host Setup</div>
     <h2>Run your own deployment in minutes</h2>
-    <p class="section-sub">For self-hosting, all you need is Docker and Git. No databases to configure and no complex environment setup required.</p>
+    <p class="section-sub">Running the server is recommended — it unlocks the full synergy between Crossed Viper and Leaf Viper, with shared accounts, automatic budget entries from completed finance tasks, and access from any client. All you need is Docker and Git.</p>
+
+    <p class="section-sub" style="margin-top:-.5rem">If you prefer not to run a server, desktop and Android apps can store all data locally on the device as an alternative.</p>
 
     <div class="qs-steps">
       <div class="qs-step">
@@ -666,8 +629,8 @@
       <div class="qs-step">
         <div class="qs-num">3</div>
         <div>
-          <h4>Open in your browser</h4>
-          <p>Visit <code>http://localhost:8000</code> and pick an app. Default login: <code>admin</code> / <code>admin123</code>.</p>
+          <h4>Review setup details</h4>
+          <p>Open the project README on GitHub for full run instructions and default credentials.</p>
         </div>
       </div>
       <div class="qs-step">
@@ -721,7 +684,7 @@
     <p class="section-sub">If you want to support development through paid app channels, use Google Play or Microsoft Store.</p>
 
     <div class="hosting-grid">
-      <div class="hosting-card hosted">
+      <div class="hosting-card primary">
         <span class="hosting-tag">Paid App</span>
         <h3>Google Play</h3>
         <p>Get the Android app from Google Play and support ongoing development through the store release.</p>
@@ -764,7 +727,7 @@
     <p class="section-sub">Viper Suite is designed and maintained by Serpens Tech, focused on open-source productivity tools and transparent software development.</p>
 
     <div class="hosting-grid">
-      <div class="hosting-card hosted">
+      <div class="hosting-card primary">
         <span class="hosting-tag">Company</span>
         <img src="logo.png" alt="Serpens Tech logo" class="company-logo" />
         <h3>Serpens Tech</h3>
@@ -776,7 +739,7 @@
         <span class="hosting-tag">Open Source</span>
         <h3>Public Development</h3>
         <p>Follow releases, roadmap progress, and source code updates directly on GitHub.</p>
-        <p style="margin-top:.85rem"><a href="https://github.com/serpens-tech/viper-suite" class="btn-secondary" style="display:inline-flex">Visit Project GitHub</a></p>
+        <p style="margin-top:.85rem"><a href="https://github.com/serpens-tech" class="btn-secondary" style="display:inline-flex">Visit Project GitHub</a></p>
       </div>
     </div>
   </div>
@@ -790,10 +753,10 @@
     <p class="section-sub">For support, partnerships, or deployment questions, contact us by email.</p>
 
     <div class="hosting-grid">
-      <div class="hosting-card hosted">
+      <div class="hosting-card primary">
         <span class="hosting-tag">Email</span>
         <h3>Viper Suite Team</h3>
-        <p><a href="mailto:contact@viper-suite.com">contact@viper-suite.com</a></p>
+        <p><a href="mailto:viper@serpens-tech.com">viper@serpens-tech.com</a></p>
       </div>
     </div>
   </div>
