@@ -9,216 +9,24 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:        #f7fafc;
-      --bg2:       #eef3f9;
-      --card:      #ffffff;
-      --border:    #d9e2ee;
-      --text:      #0f172a;
-      --sub:       #64748b;
-      --purple:    #d97706;
-      --purple-l:  #fef3c7;
-      --green:     #16a34a;
-      --green-l:   #dcfce7;
-      --blue:      #2563eb;
-      --blue-l:    #dbeafe;
-      --shadow:    0 8px 24px rgba(15,23,42,.08);
-      --shadow-h:  0 14px 36px rgba(15,23,42,.14);
-      --radius:    14px;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg:       #0f172a;
-        --bg2:      #101a2f;
-        --card:     #182235;
-        --border:   #334155;
-        --text:     #f1f5f9;
-        --sub:      #94a3b8;
-        --purple:   #f59e0b;
-        --purple-l: #292106;
-        --green:    #4ade80;
-        --green-l:  #123522;
-        --blue:     #60a5fa;
-        --blue-l:   #1e3a8a;
-        --shadow:   0 8px 24px rgba(0,0,0,.4);
-        --shadow-h: 0 14px 36px rgba(0,0,0,.58);
-      }
-    }
-
-    body {
-      font-family: "Manrope", "Segoe UI", sans-serif;
-      background:
-        radial-gradient(1100px 480px at -10% -10%, rgba(217,119,6,.09), transparent 60%),
-        radial-gradient(1100px 520px at 110% 110%, rgba(22,163,74,.10), transparent 60%),
-        var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    h1, h2, h3, h4 { font-family: "Sora", "Manrope", sans-serif; }
-    a { color: var(--purple); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    /* ── Nav ─────────────────────────────────────────────────────────── */
-    nav {
-      position: sticky; top: 0; z-index: 10;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: .85rem 2rem;
-      background: rgba(248,250,252,.88);
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(14px);
-    }
-    @media (prefers-color-scheme: dark) { nav { background: rgba(15,23,42,.82); } }
-    .nav-logo {
-      display: flex; align-items: center; gap: .55rem;
-      font-weight: 800; font-size: 1.1rem; color: var(--text); letter-spacing: -.02em;
-    }
-    .nav-logo .logo-open { color: var(--purple); }
-    .nav-logo img { width: 28px; height: 28px; border-radius: 7px; }
-    .nav-links { display: flex; gap: 1.4rem; align-items: center; }
-    .nav-links a { color: var(--sub); font-size: .9rem; font-weight: 500; }
-    .nav-links a:hover { color: var(--text); text-decoration: none; }
-    .btn-gh {
-      display: flex; align-items: center; gap: .4rem;
-      padding: .4rem .9rem; border: 1px solid var(--border); border-radius: 8px;
-      font-size: .85rem; font-weight: 600; color: var(--text) !important;
-      background: var(--card); box-shadow: var(--shadow);
-    }
-    .lang-switch {
-      font-size: .8rem; font-weight: 600; color: var(--sub) !important;
-      padding: .3rem .6rem; border: 1px solid var(--border);
-      border-radius: 6px; background: var(--card);
-    }
-    .lang-switch:hover { color: var(--text) !important; text-decoration: none !important; }
-
-    /* ── Sections ─────────────────────────────────────────────────────── */
-    section { padding: 5rem 1.5rem; }
-    .bg-alt { background: var(--bg2); }
-    .section-inner { max-width: 1020px; margin: 0 auto; }
-    .section-label {
-      font-size: .72rem; font-weight: 700; letter-spacing: .1em;
-      text-transform: uppercase; color: var(--purple); margin-bottom: .6rem;
-    }
-    h2 { font-size: clamp(1.6rem,3.5vw,2.2rem); font-weight: 800; margin-bottom: .9rem; }
-    .section-sub { color: var(--sub); font-size: 1rem; max-width: 640px; margin-bottom: 2rem; }
-
-    /* ── Hero ─────────────────────────────────────────────────────────── */
-    .hero { padding: 4.5rem 1.5rem 3.5rem; }
-    .hero h1 {
-      font-size: clamp(2rem,5vw,3rem); font-weight: 800; line-height: 1.15;
-      margin-bottom: 1.1rem;
-    }
-    .purple { color: var(--purple); }
-    .hero p { color: var(--sub); font-size: 1.05rem; max-width: 600px; margin-bottom: 1.8rem; }
-    .hero-cta { display: flex; flex-wrap: wrap; gap: .75rem; }
-    .btn-primary {
-      background: var(--purple); color: #fff; padding: .65rem 1.4rem;
-      border-radius: 9px; font-weight: 700; font-size: .95rem;
-      display: inline-flex; align-items: center; gap: .4rem;
-    }
-    .btn-secondary {
-      background: var(--card); color: var(--text); border: 1px solid var(--border);
-      padding: .65rem 1.4rem; border-radius: 9px; font-weight: 600; font-size: .95rem;
-      display: inline-flex; align-items: center; gap: .4rem; box-shadow: var(--shadow);
-    }
-
-    /* ── Code block ───────────────────────────────────────────────────── */
-    .code-block {
-      background: #0f172a; color: #e2e8f0; border-radius: var(--radius);
-      padding: 1.25rem 1.5rem; font-family: monospace; font-size: .88rem;
-      margin-top: 2rem; overflow-x: auto; border: 1px solid #1e293b;
-    }
-    @media (prefers-color-scheme: dark) { .code-block { background: #020817; border-color: #334155; } }
-    .code-block .cmd { color: #f59e0b; }
-    .code-block .comment { color: #64748b; }
-
-    /* ── App cards ────────────────────────────────────────────────────── */
-    .app-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 1.5rem; }
-    .app-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 1.75rem; box-shadow: var(--shadow);
-    }
-    .app-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-    .app-icon { width: 44px; height: 44px; border-radius: 10px; object-fit: contain; }
-    .app-header h3 { font-size: 1.1rem; font-weight: 700; }
-    .app-header p { font-size: .85rem; color: var(--sub); }
-    .app-card ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .45rem; }
-    .app-card li { font-size: .92rem; color: var(--sub); display: flex; gap: .5rem; }
-    .app-card li::before { content: "→"; color: var(--purple); flex-shrink: 0; }
-
-    /* ── Clients ──────────────────────────────────────────────────────── */
-    .client-grid { display: flex; flex-wrap: wrap; gap: 1rem; }
-    .client-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 1.25rem 1.75rem; box-shadow: var(--shadow);
-      display: flex; flex-direction: column; align-items: center; gap: .4rem; min-width: 110px;
-    }
-    .client-icon { font-size: 2rem; }
-    .client-icon-img { width: 2.5rem; height: 2.5rem; object-fit: contain; }
-    .client-card h4 { font-size: .9rem; font-weight: 700; }
-
-    /* ── Quick start ──────────────────────────────────────────────────── */
-    .qs-steps { display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1.5rem; }
-    .qs-step {
-      display: flex; gap: 1.1rem; align-items: flex-start;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow);
-    }
-    .qs-num {
-      min-width: 32px; height: 32px; border-radius: 50%;
-      background: var(--purple-l); color: var(--purple);
-      font-weight: 800; font-size: .95rem;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .qs-step h4 { font-size: .95rem; font-weight: 700; margin-bottom: .3rem; }
-    .qs-step p { font-size: .9rem; color: var(--sub); }
-    .qs-step code {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 5px; padding: .15rem .4rem; font-size: .83rem;
-    }
-
-    /* ── Hosting cards ────────────────────────────────────────────────── */
-    .hosting-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 1.25rem; }
-    .hosting-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow);
-      display: flex; flex-direction: column; gap: .5rem;
-    }
-    .hosting-card.primary { border-color: var(--purple); }
-    .hosting-tag {
-      font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-      color: var(--purple); background: var(--purple-l); border-radius: 5px;
-      padding: .18rem .5rem; display: inline-block; width: fit-content;
-    }
-    .hosting-card h3 { font-size: 1rem; font-weight: 700; }
-    .hosting-card p { font-size: .9rem; color: var(--sub); }
-
-    /* ── Footer ───────────────────────────────────────────────────────── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 1.5rem 2rem; text-align: center;
-      font-size: .83rem; color: var(--sub);
-    }
-    footer a { color: var(--sub); }
-    footer a:hover { color: var(--text); }
-  </style>
+  <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
 
+<!-- ── Nav ──────────────────────────────────────────────────────────── -->
 <nav>
   <div class="nav-logo">
     <img src="../icon-256.png" alt="Viper Suite" />
-    <span class="logo-open">Viper</span><span>Suite</span>
+    <span class="logo-open">Viper</span><span class="logo-web">Suite</span>
   </div>
   <div class="nav-links">
     <a href="#apps">Aplikacije</a>
     <a href="#clients">Klijenti</a>
     <a href="#quickstart">Pokretanje</a>
     <a href="#support">Preuzimanje</a>
+    <a href="#stores">Podržite nas</a>
+    <a href="#patreon">Patreon</a>
+    <a href="#serpens-tech">Serpens Tech</a>
     <a href="#contact">Kontakt</a>
     <a href="../index.html" class="lang-switch">EN</a>
     <a href="https://github.com/serpens-tech/viper-suite" class="btn-gh">
@@ -230,7 +38,7 @@
 
 <!-- ── Hero ─────────────────────────────────────────────────────────── -->
 <section style="padding: 0;">
-  <div class="section-inner hero">
+  <div class="hero">
     <h1>Open source.<br>Transparentnost po dizajnu.<br><span class="purple">Spreman na vašem serveru.</span></h1>
     <p><strong>Viper Suite</strong> je izgrađen oko open-source transparentnosti: pregledajte kod, verifikujte ponašanje i pokrenite na sopstvenoj infrastrukturi. Potpuna kontrola nad podacima i operacijama.</p>
     <div class="hero-cta">
@@ -239,10 +47,15 @@
     </div>
 
     <div class="code-block">
-      <span class="comment"># Pokrenite Viper Suite sa jednom komandom</span><br>
-      <span class="cmd">git clone</span> https://github.com/serpens-tech/viper-suite.git<br>
-      <span class="cmd">cd</span> viper-suite<br>
-      <span class="cmd">docker compose up -d</span>
+      <div class="code-block-header">Opciono: pokrenite server za 3 komande</div>
+      <pre><span class="cmnt"># klonirajte repozitorijum</span>
+<span class="cmd">git clone</span> https://github.com/serpens-tech/viper-suite.git
+<span class="cmd">cd</span> viper-suite
+
+<span class="cmnt"># pokrenite sve</span>
+<span class="cmd">docker compose up -d</span>
+
+<span class="cmnt"># zatim pratite README za pristup i detalje podešavanja</span></pre>
     </div>
   </div>
 </section>
@@ -254,16 +67,15 @@
     <h2>Sve što vam treba da ostanete organizovani</h2>
     <p class="section-sub">Viper Suite dolazi sa dve aplikacije koje dele isti backend i bazu podataka u potpuno self-hosted okruženju.</p>
 
-    <div class="app-grid">
-      <div class="app-card">
-        <div class="app-header">
-          <img src="../icon-256.png" alt="Crossed Viper" class="app-icon" />
+    <div class="app-cards">
+      <div class="app-card purple">
+        <div class="app-card-header">
           <div>
             <h3>Crossed Viper</h3>
             <p>Upravljanje zadacima i listama</p>
           </div>
         </div>
-        <ul>
+        <ul class="feature-list">
           <li>Više lista zadataka sa prioritetima i rokovima</li>
           <li>Korisnički nalozi sa JWT autentifikacijom</li>
           <li>Admin panel za upravljanje korisnicima</li>
@@ -273,15 +85,14 @@
         </ul>
       </div>
 
-      <div class="app-card">
-        <div class="app-header">
-          <img src="../icon-256.png" alt="Leaf Viper" class="app-icon" />
+      <div class="app-card green">
+        <div class="app-card-header">
           <div>
             <h3>Leaf Viper</h3>
             <p>Praćenje prihoda i rashoda</p>
           </div>
         </div>
-        <ul>
+        <ul class="feature-list">
           <li>Praćenje prihoda i rashoda sa tekućim stanjem</li>
           <li>Automatski unosi iz završenih finansijskih zadataka iz Crossed Viper-a</li>
           <li>Istorija transakcija po datumu</li>
@@ -327,6 +138,7 @@
     <div class="section-label">Pokretanje servera</div>
     <h2>Pokrenite sopstveni server za nekoliko minuta</h2>
     <p class="section-sub">Pokretanje servera je preporučeno — omogućava punu sinergiju između Crossed Viper-a i Leaf Viper-a, sa deljenim nalozima, automatskim budžetskim unosima i pristupom sa svakog klijenta. Potrebni su samo Docker i Git.</p>
+
     <p class="section-sub" style="margin-top:-.5rem">Ako ne želite server, desktop i Android aplikacije mogu čuvati sve podatke lokalno na uređaju kao alternativu.</p>
 
     <div class="qs-steps">
@@ -363,7 +175,7 @@
 </section>
 
 <!-- ── Support ─────────────────────────────────────────────────────── -->
-<section id="support" class="bg-alt">
+<section id="support">
   <div class="section-inner">
     <div class="section-label">Preuzmite Viper Suite</div>
     <h2>Počnite sa besplatnim preuzimanjem</h2>
@@ -394,8 +206,8 @@
   </div>
 </section>
 
-<!-- ── Stores ─────────────────────────────────────────────────────── -->
-<section id="stores">
+<!-- ── Store Downloads ─────────────────────────────────────────────── -->
+<section class="bg-alt" id="stores">
   <div class="section-inner">
     <div class="section-label">Podrška kroz prodavnice</div>
     <h2>Podržite kroz zvanične prodavnice</h2>
@@ -403,16 +215,16 @@
 
     <div class="hosting-grid">
       <div class="hosting-card primary">
-        <span class="hosting-tag">Google Play</span>
+        <span class="hosting-tag">Plaćena aplikacija</span>
         <h3>Google Play</h3>
         <p>Preuzmite Android aplikaciju sa Google Play-a i podržite razvoj kroz store kanal.</p>
         <p style="margin-top:.85rem"><a href="https://play.google.com/store" class="btn-primary" style="display:inline-flex">Podržite na Google Play-u</a></p>
       </div>
 
       <div class="hosting-card self">
-        <span class="hosting-tag">Microsoft Store</span>
+        <span class="hosting-tag">Plaćena aplikacija</span>
         <h3>Microsoft Store</h3>
-        <p>Preuzmite Windows aplikaciju sa Microsoft Store-a i podržite projekat.</p>
+        <p>Preuzmite Windows aplikaciju sa Microsoft Store-a i podržite projekat kroz store kanal.</p>
         <p style="margin-top:.85rem"><a href="https://apps.microsoft.com/store" class="btn-secondary" style="display:inline-flex">Podržite na Microsoft Store-u</a></p>
       </div>
     </div>
@@ -420,13 +232,13 @@
 </section>
 
 <!-- ── Patreon ─────────────────────────────────────────────────────── -->
-<section id="patreon" class="bg-alt">
+<section id="patreon">
   <div class="section-inner">
     <div class="section-label">Direktna podrška</div>
     <h2>Podržite direktno na Patreon-u</h2>
     <p class="section-sub">Patreon je odvojen od preuzimanja aplikacija i store kanala, fokusiran na kontinuiranu podršku za nove funkcionalnosti i održavanje.</p>
 
-    <div class="hosting-grid" style="max-width:340px">
+    <div class="hosting-grid">
       <div class="hosting-card self">
         <span class="hosting-tag">Patreon</span>
         <h3>Viper Suite Patreon</h3>
@@ -447,7 +259,7 @@
     <div class="hosting-grid">
       <div class="hosting-card primary">
         <span class="hosting-tag">Kompanija</span>
-        <img src="../logo.png" alt="Serpens Tech logo" style="width:48px;height:48px;object-fit:contain;margin:.25rem 0;" />
+        <img src="../logo.png" alt="Serpens Tech logo" class="company-logo" />
         <h3>Serpens Tech</h3>
         <p>Izgradnja praktičnih proizvoda sa otvorenim kodom, jasnom arhitekturom i dizajnom orijentisanim ka korisniku.</p>
         <p style="margin-top:.85rem"><a href="https://serpens-tech.com" class="btn-secondary" style="display:inline-flex">Posetite Serpens Tech</a></p>
@@ -470,7 +282,7 @@
     <h2>Stupite u kontakt</h2>
     <p class="section-sub">Za podršku, partnerstva ili pitanja o pokretanju, kontaktirajte nas putem e-maila.</p>
 
-    <div class="hosting-grid" style="max-width:340px">
+    <div class="hosting-grid">
       <div class="hosting-card primary">
         <span class="hosting-tag">E-mail</span>
         <h3>Viper Suite tim</h3>

@@ -9,107 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:       #f7fafc;
-      --bg2:      #eef3f9;
-      --card:     #ffffff;
-      --border:   #d9e2ee;
-      --text:     #0f172a;
-      --sub:      #64748b;
-      --accent:   #d97706;
-      --shadow:   0 8px 24px rgba(15,23,42,.08);
-      --radius:   14px;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg:     #0f172a;
-        --bg2:    #101a2f;
-        --card:   #182235;
-        --border: #334155;
-        --text:   #f1f5f9;
-        --sub:    #94a3b8;
-        --accent: #f59e0b;
-        --shadow: 0 8px 24px rgba(0,0,0,.4);
-      }
-    }
-
-    body {
-      font-family: 'Manrope', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      background: var(--bg); border-bottom: 1px solid var(--border);
-      padding: 0 2rem; display: flex; align-items: center;
-      justify-content: space-between; height: 60px;
-    }
-
-    .nav-left { display: flex; align-items: center; gap: 1rem; }
-
-    .nav-logo {
-      display: flex; align-items: center; gap: .6rem;
-      font-family: 'Sora', sans-serif; font-weight: 700;
-      font-size: 1.05rem; color: var(--text); text-decoration: none;
-    }
-    .nav-logo img { width: 26px; height: 26px; object-fit: contain; }
-    .nav-sep { color: var(--border); font-size: 1.2rem; }
-    .nav-page { font-size: .9rem; color: var(--sub); font-weight: 500; }
-
-    .lang-switch {
-      font-size: .8rem; font-weight: 600; color: var(--sub);
-      padding: .3rem .6rem; border: 1px solid var(--border);
-      border-radius: 6px; background: var(--card);
-    }
-    .lang-switch:hover { color: var(--text); text-decoration: none; }
-
-    .content { max-width: 720px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
-
-    .page-label {
-      font-size: .75rem; font-weight: 700; letter-spacing: .1em;
-      text-transform: uppercase; color: var(--accent); margin-bottom: .75rem;
-    }
-
-    h1 {
-      font-family: 'Sora', sans-serif;
-      font-size: clamp(1.7rem,4vw,2.2rem); font-weight: 800; margin-bottom: .5rem;
-    }
-
-    .updated { font-size: .85rem; color: var(--sub); margin-bottom: 2.5rem; }
-
-    h2 {
-      font-family: 'Sora', sans-serif; font-size: 1.15rem;
-      font-weight: 700; margin: 2.25rem 0 .6rem;
-    }
-
-    p { margin-bottom: .9rem; }
-    p:last-child { margin-bottom: 0; }
-
-    ul { padding-left: 1.4rem; margin-bottom: .9rem; }
-    ul li { margin-bottom: .35rem; }
-
-    .highlight {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 2rem;
-    }
-
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 1.5rem 2rem; text-align: center;
-      font-size: .85rem; color: var(--sub);
-    }
-    footer a { color: var(--sub); }
-    footer a:hover { color: var(--text); }
-  </style>
+  <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
 
@@ -117,7 +17,7 @@
   <div class="nav-left">
     <a href="index.html" class="nav-logo">
       <img src="../icon-256.png" alt="Viper Suite" />
-      Viper Suite
+      <span class="logo-open">Viper</span><span class="logo-web">Suite</span>
     </a>
     <span class="nav-sep">/</span>
     <span class="nav-page">Politika privatnosti</span>
