@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Politika privatnosti — Viper Suite</title>
+  <link rel="icon" type="image/png" href="../icon-256.png" />
+  <meta name="description" content="Politika privatnosti za Viper Suite — open-source, self-hosted softver za produktivnost od Serpens Tech-a." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f7fafc;
+      --bg2:      #eef3f9;
+      --card:     #ffffff;
+      --border:   #d9e2ee;
+      --text:     #0f172a;
+      --sub:      #64748b;
+      --accent:   #d97706;
+      --shadow:   0 8px 24px rgba(15,23,42,.08);
+      --radius:   14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:     #0f172a;
+        --bg2:    #101a2f;
+        --card:   #182235;
+        --border: #334155;
+        --text:   #f1f5f9;
+        --sub:    #94a3b8;
+        --accent: #f59e0b;
+        --shadow: 0 8px 24px rgba(0,0,0,.4);
+      }
+    }
+
+    body {
+      font-family: 'Manrope', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; display: flex; align-items: center;
+      justify-content: space-between; height: 60px;
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 1rem; }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: .6rem;
+      font-family: 'Sora', sans-serif; font-weight: 700;
+      font-size: 1.05rem; color: var(--text); text-decoration: none;
+    }
+    .nav-logo img { width: 26px; height: 26px; object-fit: contain; }
+    .nav-sep { color: var(--border); font-size: 1.2rem; }
+    .nav-page { font-size: .9rem; color: var(--sub); font-weight: 500; }
+
+    .lang-switch {
+      font-size: .8rem; font-weight: 600; color: var(--sub);
+      padding: .3rem .6rem; border: 1px solid var(--border);
+      border-radius: 6px; background: var(--card);
+    }
+    .lang-switch:hover { color: var(--text); text-decoration: none; }
+
+    .content { max-width: 720px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+
+    .page-label {
+      font-size: .75rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .75rem;
+    }
+
+    h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.7rem,4vw,2.2rem); font-weight: 800; margin-bottom: .5rem;
+    }
+
+    .updated { font-size: .85rem; color: var(--sub); margin-bottom: 2.5rem; }
+
+    h2 {
+      font-family: 'Sora', sans-serif; font-size: 1.15rem;
+      font-weight: 700; margin: 2.25rem 0 .6rem;
+    }
+
+    p { margin-bottom: .9rem; }
+    p:last-child { margin-bottom: 0; }
+
+    ul { padding-left: 1.4rem; margin-bottom: .9rem; }
+    ul li { margin-bottom: .35rem; }
+
+    .highlight {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 2rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem; text-align: center;
+      font-size: .85rem; color: var(--sub);
+    }
+    footer a { color: var(--sub); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-left">
+    <a href="index.html" class="nav-logo">
+      <img src="../icon-256.png" alt="Viper Suite" />
+      Viper Suite
+    </a>
+    <span class="nav-sep">/</span>
+    <span class="nav-page">Politika privatnosti</span>
+  </div>
+  <a href="../privacy.html" class="lang-switch">EN</a>
+</nav>
+
+<div class="content">
+  <div class="page-label">Pravno</div>
+  <h1>Politika privatnosti</h1>
+  <p class="updated">Poslednje ažuriranje: <span id="yr"></span></p>
+
+  <div class="highlight">
+    <strong>Kratka verzija:</strong> Viper Suite ne prikuplja, ne prenosi niti deli vaše podatke. Sve ostaje na vašoj sopstvenoj infrastrukturi ili uređaju.
+  </div>
+
+  <h2>1. Pregled</h2>
+  <p>Viper Suite je open-source, self-hosted softver koji razvija Serpens Tech. Ova politika se primenjuje na softver Viper Suite, uključujući web klijent, desktop aplikacije i Android aplikacije.</p>
+  <p>Pošto je Viper Suite self-hosted, vi — a ne Serpens Tech — upravljate serverom koji čuva i obrađuje sve podatke. Serpens Tech nema pristup vašim podacima u bilo kom trenutku.</p>
+
+  <h2>2. Podaci koje ne prikupljamo</h2>
+  <p>Serpens Tech ne prikuplja, ne čuva niti ima pristup sledećim podacima:</p>
+  <ul>
+    <li>Lični podaci (ime, e-mail adresa, itd.)</li>
+    <li>Kredencijali naloga</li>
+    <li>Zadaci, liste, prihodi ili rashodi</li>
+    <li>Podaci o korišćenju, analitika ili izveštaji o greškama</li>
+    <li>Identifikatori uređaja ili IP adrese</li>
+    <li>Bilo koji drugi sadržaj koji generiše korisnik</li>
+  </ul>
+
+  <h2>3. Kako se podaci čuvaju</h2>
+  <p>Svi podaci se čuvaju na jedan od dva načina, zavisno od toga kako koristite aplikaciju:</p>
+  <ul>
+    <li><strong>Server mod:</strong> Podaci se čuvaju u PostgreSQL bazi podataka na serveru koji vi postavljate i kontrolišete. Serpens Tech nema vezu sa vašim serverom.</li>
+    <li><strong>Lokalni mod (samo desktop i Android):</strong> Podaci se čuvaju u lokalnom skladištu uređaja na kome se aplikacija pokreće. Ne uspostavlja se mrežna veza.</li>
+  </ul>
+
+  <h2>4. Servisi trećih strana</h2>
+  <p>Sam softver Viper Suite ne koristi nikakve analitičke servise, praćenje ni oglašavanje trećih strana.</p>
+  <p>Ako odlučite da hostujete Viper Suite kod cloud provajdera, politika privatnosti tog provajdera se primenjuje na infrastrukturu koju koristite. Serpens Tech nema nikakvo učešće ni kontrolu nad tim aranžmanom.</p>
+
+  <h2>5. Open source</h2>
+  <p>Viper Suite je potpuno open-source pod <a href="https://github.com/serpens-tech/viper-suite/blob/main/LICENSE">Apache License 2.0</a>. Možete pregledati svaki red koda kako biste verifikovali tvrdnje iz ove politike.</p>
+
+  <h2>6. Distribucija kroz prodavnice</h2>
+  <p>Ako preuzmete Viper Suite putem Google Play-a ili Microsoft Store-a, te platforme mogu prikupljati podatke u skladu sa sopstvenim politikama privatnosti. Serpens Tech ne prima takve podatke.</p>
+
+  <h2>7. Izmene ove politike</h2>
+  <p>Ako se ova politika ažurira, nova verzija će biti objavljena na ovoj URL adresi sa revidiranim datumom. Pošto Viper Suite ne prikuplja korisničke podatke, izmene će retko imati bilo kakvog uticaja na vas.</p>
+
+  <h2>8. Kontakt</h2>
+  <p>Za sva pitanja u vezi sa ovom politikom, kontaktirajte nas na <a href="mailto:viper@serpens-tech.com">viper@serpens-tech.com</a>.</p>
+</div>
+
+<footer>
+  <p>
+    Napravio <strong>Serpens Tech</strong>. &nbsp;·&nbsp;
+    Viper Suite je besplatan open-source softver objavljen pod <a href="https://github.com/serpens-tech/viper-suite/blob/main/LICENSE">Apache License 2.0</a>.
+    &nbsp;·&nbsp;
+    <a href="https://github.com/serpens-tech/viper-suite">GitHub</a>
+    &nbsp;·&nbsp;
+    Bez telemetrije &nbsp;·&nbsp; Bez praćenja &nbsp;·&nbsp; Vaši podaci ostaju vaši
+  </p>
+</footer>
+
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>
